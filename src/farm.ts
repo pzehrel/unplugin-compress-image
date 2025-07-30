@@ -1,4 +1,4 @@
 import { createFarmPlugin } from 'unplugin'
-import { unpluginFactory } from '.'
+import { unpluginCompressImageFactory } from '.'
 
-export default createFarmPlugin(unpluginFactory)
+export default createFarmPlugin(unpluginCompressImageFactory)

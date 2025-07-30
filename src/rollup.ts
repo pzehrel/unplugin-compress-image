@@ -1,4 +1,4 @@
 import { createRollupPlugin } from 'unplugin'
-import { unpluginFactory } from '.'
+import { unpluginCompressImageFactory } from '.'
 
-export default createRollupPlugin(unpluginFactory)
+export default createRollupPlugin(unpluginCompressImageFactory)

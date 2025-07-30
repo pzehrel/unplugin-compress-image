@@ -1,4 +1,4 @@
 import { createVitePlugin } from 'unplugin'
-import { unpluginFactory } from '.'
+import { unpluginCompressImageFactory } from '.'
 
-export default createVitePlugin(unpluginFactory)
+export default createVitePlugin(unpluginCompressImageFactory)

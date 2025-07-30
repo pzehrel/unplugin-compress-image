@@ -1,4 +1,4 @@
 import { createEsbuildPlugin } from 'unplugin'
-import { unpluginFactory } from '.'
+import { unpluginCompressImageFactory } from '.'
 
-export default createEsbuildPlugin(unpluginFactory)
+export default createEsbuildPlugin(unpluginCompressImageFactory)

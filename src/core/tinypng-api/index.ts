@@ -1,28 +1,36 @@
 import type { Compressor } from '../compressor'
 import UA from 'user-agents'
 
-export const tinyPngApiCompressor: Compressor = async (input) => {
-  const headers = new Headers({ 'X-Forwarded-For': randomIpv4(), 'User-Agent': randomUA() })
+export const tinypngApi: Compressor = {
+  name: 'tinypng-api',
+  // test: /\.png$/i,
+  compress: async (input) => {
+    const headers = { 'X-Forwarded-For': randomIpv4(), 'User-Agent': randomUA() }
 
-  const uploadResponse = await fetch('https://tinypng.com/backend/opt/shrink', {
-    method: 'POST',
-    headers,
-    duplex: 'half',
-    body: input.file,
-  })
+    const uploadResponse = await fetch('https://tinypng.com/backend/opt/shrink', {
+      method: 'POST',
+      headers: new Headers(headers),
+      duplex: 'half',
+      body: input.file,
+    })
 
-  const data = await uploadResponse.json() as UploadResult
+    const data = await uploadResponse.json() as UploadResult
 
-  const response = await fetch(data.output.url, { method: 'GET', headers })
+    const response = await fetch(data.output.url, {
+      method: 'GET',
+      headers: new Headers({
+        ...headers,
+        'Content-Type': 'application/octet-stream',
+      }),
+    })
 
-  // if (response.body) {
-  //   const ws = createWriteStream('/Users/mbp14/Downloads/test.png')
-  //   Readable.fromWeb(response.body).pipe(ws)
-  // }
+    // if (response.body) {
+    //   const ws = createWriteStream('/Users/mbp14/Downloads/test.png')
+    //   Readable.fromWeb(response.body).pipe(ws)
+    // }
 
-  return {
-    file: response.body!,
-  }
+    return response.arrayBuffer()
+  },
 }
 
 interface UploadResult {

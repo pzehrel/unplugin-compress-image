@@ -1,17 +1,41 @@
 import type { UnpluginFactory } from 'unplugin'
 import type { Options } from './types'
 import { createUnplugin } from 'unplugin'
+import { compressImages } from './core'
 
-export const unpluginFactory: UnpluginFactory<Options | undefined> = options => ({
-  name: 'unplugin-starter',
-  transformInclude(id) {
-    return id.endsWith('main.ts')
-  },
-  transform(code) {
-    return code.replace('__UNPLUGIN__', `Hello Unplugin! ${options}`)
-  },
-})
+export const unpluginCompressImageFactory: UnpluginFactory<Options | undefined> = (options) => {
+  let root = ''
+  // let outputPath = ''
 
-export const unplugin = /* #__PURE__ */ createUnplugin(unpluginFactory)
+  return {
+    name: 'unplugin-compress-image',
 
-export default unplugin
+    vite: {
+      configResolved: (config) => {
+        root = config.root
+        // outputPath = config.build.outDir
+      },
+      generateBundle: async (_, bundle) => {
+        const fileMap = Object.entries(bundle).reduce((acc, [fileName, asset]) => {
+          if (asset.type === 'asset' && typeof asset.source !== 'string') {
+            acc[fileName] = asset.source
+          }
+          return acc
+        }, {} as Record<string, Uint8Array>)
+
+        await compressImages({
+          root,
+          options,
+          fileMap,
+          // onOptimizedOne: () => {
+
+          // },
+        })
+      },
+    },
+  }
+}
+
+export const unpluginCompressImage = /* #__PURE__ */ createUnplugin(unpluginCompressImageFactory)
+
+export default unpluginCompressImage

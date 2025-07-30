@@ -1,4 +1,4 @@
 import { createRspackPlugin } from 'unplugin'
-import { unpluginFactory } from '.'
+import { unpluginCompressImageFactory } from '.'
 
-export default createRspackPlugin(unpluginFactory)
+export default createRspackPlugin(unpluginCompressImageFactory)

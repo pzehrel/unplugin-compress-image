@@ -1,4 +1,4 @@
 import { createWebpackPlugin } from 'unplugin'
-import { unpluginFactory } from '.'
+import { unpluginCompressImageFactory } from '.'
 
-export default createWebpackPlugin(unpluginFactory)
+export default createWebpackPlugin(unpluginCompressImageFactory)
