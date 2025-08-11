@@ -2,7 +2,7 @@
   "name": "unplugin-starter",
   "type": "module",
   "version": "0.1.0",
-  "packageManager": "pnpm@10.13.1",
+  "packageManager": "pnpm@10.14.0",
   "description": "",
   "license": "MIT",
   "homepage": "https://github.com/antfu/unplugin-starter#readme",
@@ -103,12 +103,12 @@
     "imagemin-pngquant": "^10.0.0",
     "imagemin-webp": "^8.0.0",
     "unplugin": "^2.3.5",
-    "user-agents": "^1.1.610"
+    "user-agents": "^1.1.627"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^4.17.0",
-    "@nuxt/kit": "^3.17.7",
-    "@nuxt/schema": "^3.17.7",
+    "@antfu/eslint-config": "^5.2.0",
+    "@nuxt/kit": "^4.0.3",
+    "@nuxt/schema": "^4.0.3",
     "@types/emscripten": "^1.40.1",
     "@types/findup-sync": "^4.0.5",
     "@types/imagemin": "^9.0.1",
@@ -116,17 +116,17 @@
     "@types/imagemin-jpegtran": "^5.0.4",
     "@types/imagemin-mozjpeg": "^8.0.4",
     "@types/imagemin-webp": "^7.0.3",
-    "@types/node": "^22.16.4",
+    "@types/node": "^22.17.1",
     "@types/user-agents": "^1.0.4",
-    "bumpp": "^10.2.0",
-    "eslint": "^9.31.0",
+    "bumpp": "^10.2.2",
+    "eslint": "^9.33.0",
     "nodemon": "^3.1.10",
-    "rollup": "^4.45.1",
-    "tsdown": "^0.12.9",
+    "rollup": "^4.46.2",
+    "tsdown": "^0.14.0",
     "tsx": "^4.20.3",
-    "typescript": "^5.8.3",
-    "vite": "^6.3.5",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.1",
     "vitest": "^3.2.4",
-    "webpack": "^5.100.2"
+    "webpack": "^5.101.0"
   }
 }
