@@ -1,36 +1,32 @@
 import type { UnpluginFactory } from 'unplugin'
+import type { Files } from './compressor'
 import type { Options } from './types'
+import { join } from 'node:path'
 import { createUnplugin } from 'unplugin'
-import { compressImages } from './core'
+import { name as PKG_NAME } from '../package.json'
+import { compressMultiple } from './compressor'
 
 export const unpluginCompressImageFactory: UnpluginFactory<Options | undefined> = (options) => {
   let root = ''
-  // let outputPath = ''
+  let outputPath = ''
 
   return {
-    name: 'unplugin-compress-image',
-
+    name: PKG_NAME,
     vite: {
       configResolved: (config) => {
         root = config.root
-        // outputPath = config.build.outDir
+        outputPath = config.build.outDir
       },
       generateBundle: async (_, bundle) => {
-        const fileMap = Object.entries(bundle).reduce((acc, [fileName, asset]) => {
+        const files: Files = []
+        for (const filename in bundle) {
+          const asset = bundle[filename]
           if (asset.type === 'asset' && typeof asset.source !== 'string') {
-            acc[fileName] = asset.source
+            const path = join(outputPath, filename)
+            files.push({ path, fileData: asset.source })
           }
-          return acc
-        }, {} as Record<string, Uint8Array>)
-
-        await compressImages({
-          root,
-          options,
-          fileMap,
-          // onOptimizedOne: () => {
-
-          // },
-        })
+        }
+        await compressMultiple({ root, files, options })
       },
     },
   }
