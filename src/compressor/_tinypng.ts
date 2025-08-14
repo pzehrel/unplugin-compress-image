@@ -1,7 +1,7 @@
 import UA from 'user-agents'
 import { defineCompressor } from './compressor'
 
-export const __tinypng__ = defineCompressor({
+export const _tinypng = defineCompressor({
   test: /\.(png|jpg|jpeg|webp|avif)$/i,
   compress: async (input) => {
     const headers = { 'X-Forwarded-For': randomIpv4(), 'User-Agent': randomUA() }
