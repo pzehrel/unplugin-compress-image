@@ -10,8 +10,8 @@ export interface Compressor {
   compress: (input: Readable, fileType: FileTypeResult, options?: Options) => Awaitable<FileData>
 }
 
-export function defineCompressor(compressor: Compressor): Compressor {
-  return compressor
+export function defineCompressor(compressor: Compressor | (() => Compressor)): Compressor {
+  return typeof compressor === 'function' ? compressor() : compressor
 }
 
 export function compressorCanUse(compressor: Compressor, fileType: FileTypeResult): boolean {
