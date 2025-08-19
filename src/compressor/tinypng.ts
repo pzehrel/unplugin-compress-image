@@ -1,14 +1,15 @@
-import type { Options } from '../types'
+import type { ExcludeFalse, Options } from '../types'
 import { Buffer } from 'node:buffer'
 import { defineCompressor } from './compressor'
 
 export const tinypng = defineCompressor(() => {
   return {
-    test: /\.(png|jpg|jpeg|webp|avif)$/i,
-    compress: async (input, _, config) => {
-    // TODO: 需要支持多个 API Key 的轮询
-      const keys = (await parseApiKeys(config?.tinypng?.keys))
-      const api = config?.tinypng?.api ?? 'https://api.tinify.com/shrink'
+    name: 'tinypng',
+    test: ({ ext }, options) => options?.tinypng !== false && /\.(?:png|jpg|jpeg|webp|avif)$/i.test(ext),
+    compress: async (file, _, options) => {
+      // TODO: 需要支持多个 API Key 的轮询
+      const keys = (await parseApiKeys(options?.tinypng?.keys))
+      const api = options?.tinypng?.api ?? 'https://api.tinify.com/shrink'
 
       const response = await fetch(api, {
         method: 'POST',
@@ -16,17 +17,16 @@ export const tinypng = defineCompressor(() => {
           'Authorization': `Basic ${Buffer.from(`api:${keys[0]}`).toString('base64')}`,
           'Content-Type': 'application/octet-stream',
         }),
-        duplex: 'half',
-        body: input,
+        body: file,
       })
 
-      return response.body!
+      return response.arrayBuffer()
     },
 
   }
 })
 
-async function parseApiKeys(keys?: NonNullable<Options['tinypng']>['keys']): Promise<string[]> {
+async function parseApiKeys(keys?: NonNullable<ExcludeFalse<Options>['tinypng']>['keys']): Promise<string[]> {
   if (typeof keys === 'function') {
     keys = await keys()
   }

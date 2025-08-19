@@ -1,5 +1,5 @@
 {
-  "name": "unplugin-starter",
+  "name": "unplugin-compress-image",
   "type": "module",
   "version": "0.1.0",
   "packageManager": "pnpm@10.14.0",
@@ -90,8 +90,11 @@
     }
   },
   "dependencies": {
+    "@jsquash/avif": "^2.1.1",
+    "@jsquash/jpeg": "^1.5.0",
+    "@jsquash/oxipng": "^2.3.0",
+    "@jsquash/webp": "^1.5.0",
     "file-type": "^21.0.0",
-    "findup-sync": "^5.0.0",
     "unplugin": "^2.3.5",
     "user-agents": "^1.1.627"
   },

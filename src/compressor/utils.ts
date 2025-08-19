@@ -1,58 +1,59 @@
-import type { FileData } from '../compressor/compressor'
-import { Buffer } from 'node:buffer'
-import { writeFile } from 'node:fs/promises'
-import { Readable } from 'node:stream'
+import type { FileTypeResult } from 'file-type'
+import type { Options } from '../types'
+import type { FileDataType } from '../utils'
+import type { Compressor } from './compressor'
+import { existsSync, readFileSync } from 'node:fs'
+import { fileTypeFromBuffer } from 'file-type'
+import { toArrayBuffer } from '../utils'
 
-export function saveToFile(output: Buffer, filePath: string): Promise<void> {
-  return writeFile(filePath, output)
+/**
+ * Check if a compressor can be used for a given file type.
+ * @param compressor The compressor to check.
+ * @param fileType The file type to check against.
+ * @returns A boolean indicating if the compressor can be used.
+ */
+export function runCompressorTest(compressor: Compressor, fileType: FileTypeResult, options?: Options): boolean {
+  if (!compressor.test) {
+    return true
+  }
+  return typeof compressor.test === 'function' ? compressor.test(fileType, options) : compressor.test.test(fileType.ext)
 }
 
-export function toReadable(output: FileData): Readable {
-  // 如果是 Web ReadableStream，转换为 Node.js Readable
-  if (output instanceof ReadableStream) {
-    return Readable.fromWeb(output)
+/**
+ * Run a compressor on a file.
+ * @param compressor The compressor to use.
+ * @param file The file to compress, can be a path or an ArrayBuffer.
+ * @param fileType The file type of the input file.
+ * @param options The options to pass to the compressor.
+ * @returns A Promise that resolves to the compressed file as an ArrayBuffer.
+ */
+export async function runCompressor(compressor: Compressor, file: string | ArrayBuffer, fileType?: FileTypeResult, options?: Options): Promise<ArrayBuffer> {
+  file = getFile(file)
+
+  fileType = fileType || await fileTypeFromBuffer(file)
+  if (!fileType) {
+    throw new Error('Could not determine file type from buffer')
   }
 
-  // 如果是 ArrayBuffer，先转换为 Uint8Array
-  if (output instanceof ArrayBuffer) {
-    return Readable.from(new Uint8Array(output))
+  if (!runCompressorTest(compressor, fileType)) {
+    throw new Error(`${compressor.name} Compressor does not support file type: ${fileType.mime}`)
   }
 
-  // 如果是 Uint8Array 或 Buffer，创建 Readable 流
-  if (output instanceof Uint8Array || Buffer.isBuffer(output)) {
-    return Readable.from(output)
-  }
-  return output
+  const output = await compressor.compress(file, fileType, options)
+  return toArrayBuffer(output)
 }
 
-export function toBuffer<T extends FileData>(output: T): T extends Readable | ReadableStream ? Promise<Buffer> : Buffer {
-  if (output instanceof Uint8Array) {
-    return Buffer.from(output) as any
-  }
-  if (output instanceof ArrayBuffer) {
-    return Buffer.from(new Uint8Array(output)) as any
-  }
-
-  if (output instanceof ReadableStream) {
-    output = Readable.fromWeb(output) as any
+export function getFile(file: string | FileDataType): ArrayBuffer {
+  if (typeof file === 'string') {
+    if (!existsSync(file)) {
+      throw new Error(`File not found: ${file}`)
+    }
+    file = readFileSync(file)
   }
 
-  if (output instanceof Readable) {
-    return new Promise<Buffer>((resolve, reject) => {
-      const chunks: Buffer[] = []
-      output.on('data', (chunk) => {
-        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
-      })
-      output.on('end', () => resolve(Buffer.concat(chunks)))
-      output.on('error', reject)
-    }) as any
-  }
-  return output as any
+  return toArrayBuffer(file)
 }
 
-export class CompressError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = 'CompressError'
-  }
+export function filterCompressor(fileType: FileTypeResult, ...compressors: Compressor[]): Compressor[] {
+  return compressors.filter(compressor => runCompressorTest(compressor, fileType))
 }

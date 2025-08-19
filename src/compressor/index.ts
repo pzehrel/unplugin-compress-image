@@ -1,121 +1,88 @@
-import type { FileTypeResult } from 'file-type'
 import type { Options } from '../types'
-import type { Compressor, FileData } from './compressor'
-import { createReadStream, existsSync } from 'node:fs'
-import { join } from 'node:path'
-import { PassThrough } from 'node:stream'
-import { fileTypeFromStream } from 'file-type'
-import { compressorCanUse } from './compressor'
+import type { FileDataType } from '../utils'
+import type { Compressor } from './compressor'
+import { existsSync, readFileSync } from 'node:fs'
+import { fileTypeFromBuffer } from 'file-type'
+import { CompressError, toArrayBuffer } from '../utils'
+import { jsquashCompressor } from './jsquash'
 import { tinypng } from './tinypng'
-import { CompressError, saveToFile, toBuffer, toReadable } from './utils'
+import { filterCompressor } from './utils'
 
-export type Files = ({ path: string, outputpath?: string, fileData: FileData })[]
-
-export interface CompressMultipleOpts {
-  root: string
-  options?: Options
-  files: Files | string[]
-
-  onOptimized?: (result: CompressResult | CompressError, current: number, total: number) => void
-}
-
-interface CompressResult {
-  /** 压缩前的大小 */
-  beforeSize: number
-  /** 压缩后的大小 */
-  afterSize: number
-  /** 压缩率，压缩后大小 / 压缩前大小 */
+export interface CompressResult {
+  /** source file size */
+  before: number
+  /** compressed file size */
+  after: number
+  /** compression rate */
   rate: number
-  /** 是否进行了写入操作，rate>1不会写入 */
-  isWrite: boolean
-  /** 压缩的文件路径 */
-  filepath: string
-  /** 压缩后的输出路径 */
-  outputpath: string
+  /** source file path */
+  filePath: string
+  /** whether the file was written */
+  file: ArrayBuffer
+  /** real mime type of the file */
+  mime: string
+  /** compressor used */
+  compressor: Compressor
 }
 
-export async function compressMultiple(opts: CompressMultipleOpts): Promise<(CompressResult | CompressError)[]> {
-  const { root, options, files } = opts
+export interface CompressFail {
+  /** source file path */
+  filePath: string
 
-  const results: (CompressResult | CompressError)[] = []
+  /** error message */
+  error: Error
+}
 
-  let index = 0
-  for await (const file of files) {
-    const { path, outputpath, fileData } = typeof file === 'string' ? { path: file } : file
-    const filepath = join(root, path)
-    const result = await compress({ filepath, outputpath, fileData, options }).catch((error: Error) => {
-      const cerr = new CompressError(`Error compressing file ${filepath}: ${error.message}`)
-      cerr.stack = error.stack
-      return cerr
-    })
-    results.push(result)
-    if (opts.onOptimized) {
-      opts.onOptimized(result, index, files.length)
+export async function compressOne(filePath: string, sourceFile?: FileDataType, options?: Options): Promise<CompressResult> {
+  if (!sourceFile) {
+    if (!existsSync(filePath)) {
+      throw new CompressError(`File not found: ${filePath}`, filePath)
     }
-    index++
+    sourceFile = readFileSync(filePath)
+  }
+  sourceFile = toArrayBuffer(sourceFile)
+
+  const fileType = await fileTypeFromBuffer(sourceFile)
+  if (!fileType) {
+    throw new CompressError(`Could not determine file type for: ${filePath}`, filePath)
   }
 
-  return results
-}
-
-interface CompressOpts {
-  /** 文件路径 */
-  filepath: string
-  /** 输出路径，如果不提供则覆盖原文件 */
-  outputpath?: string
-  /** 文件数据，如果提供则使用此数据而不是读取文件 */
-  fileData?: FileData
-  /** 压缩选项 */
-  options?: Options
-}
-export async function compress(opts: CompressOpts): Promise<CompressResult> {
-  let { filepath, outputpath, fileData, options } = opts
-  outputpath = outputpath || filepath
-
-  if (!fileData && !existsSync(filepath)) {
-    throw new Error(`File not found: ${filepath}`)
+  const compressors = filterCompressor(fileType, ...options?.compressors || [], jsquashCompressor, tinypng)
+  if (compressors.length === 0) {
+    throw new CompressError(`No suitable compressor found for file type: ${fileType.mime}`, filePath)
   }
 
-  fileData = toReadable(fileData || createReadStream(filepath))
-
-  let beforeSize = 0
-  fileData.on('data', (chunk) => {
-    beforeSize += chunk.length
+  const queue = compressors.map(async (compressor) => {
+    const file = await compressor.compress(sourceFile, fileType, options)
+    return { file: toArrayBuffer(file), compressor }
   })
 
-  const fileType = await fileTypeFromStream(fileData.pipe(new PassThrough()))
-  if (!fileType) {
-    throw new Error('Could not determine file type')
+  const results = await Promise.allSettled(queue).then((results) => {
+    return results.filter(result => result.status === 'fulfilled').map(result => result.value)
+  })
+
+  if (results.length === 0) {
+    throw new CompressError(`All compressors failed for file: ${filePath}`, filePath)
   }
 
-  const compressor = getCompressors(fileType, options)
-  if (!compressor) {
-    throw new Error(`No suitable compressor found for file type: ${fileType.mime}`)
+  // find the best result based on file size
+  const compressed = results.sort((a, b) => a.file.byteLength - b.file.byteLength)[0]
+
+  return {
+    ...compressed,
+    before: sourceFile.byteLength,
+    after: compressed.file.byteLength,
+    rate: compressed.file.byteLength / sourceFile.byteLength,
+    mime: fileType.mime,
+    filePath,
   }
-
-  const input = fileData.pipe(new PassThrough())
-  const optimized = await compressor.compress(input, fileType, options)
-  const output = await toBuffer(optimized)
-
-  const afterSize = output.length
-  const rate = beforeSize > 0 ? (afterSize / beforeSize) : 1
-  const isWrite = beforeSize > afterSize
-
-  if (isWrite) {
-    await saveToFile(output, outputpath)
-  }
-
-  return { beforeSize, afterSize, rate, isWrite, filepath, outputpath }
 }
 
-export { Compressor, defineCompressor } from './compressor'
-
-function getCompressors(fileType: FileTypeResult, options?: Options): Compressor | undefined {
-  const compressors = options?.compressors || [tinypng]
-  if (Array.isArray(compressors)) {
-    return compressors.find(compressor => compressorCanUse(compressor, fileType))
+export async function compresses(filePaths: string[], options?: Options): Promise<CompressResult[]> {
+  const results: CompressResult[] = []
+  for await (const filePath of filePaths) {
+    const result = await compressOne(filePath, undefined, options)
+    results.push(result)
   }
-
-  // TODO
-  return tinypng
+  return results
 }

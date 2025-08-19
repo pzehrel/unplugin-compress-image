@@ -1,33 +1,51 @@
-import type { Compressor } from './compressor'
+import type { Compressor } from './compressor/compressor'
+import type { JsquashAvifOpts, JsquashMozJpegOpts, JsquashOxiPngOpts, JsquashWebpOpts } from './compressor/jsquash'
 
 export type Awaitable<T> = T | Promise<T>
 export type Arrayable<T> = T | T[]
 
 export type FnAble<R, Args extends any[] = never[]> = R | ((...args: Args) => R)
 
-export type Extnames = 'png' | 'jpg' | 'webp' | 'avif' | (string & {})
-
-export interface Options {
+export interface UserOptions {
 
   /**
-   * 为每种格式指定一个压缩器
+   * tinypng compressor config
+   *
+   * false to disable tinypng compressor
    */
-  compressors?: Compressor[] | {
-    /** [首选压缩器, ...其他压缩器] */
-    [key in Extnames]?: [Compressor, ...Compressor[]]
-  }
-
-  tinypng?: {
+  tinypng?: false | {
     /**
-     * TinyPNG API 地址
+     * TinyPNG API Endpoint
      * @default 'https://api.tinify.com/shrink'
      */
     api?: string
     /**
-     * TinyPNG API Key
-     * 可以是单个字符串或字符串数组
-     * @default process.env.TINYPNG_API_KEY
+     * TinyPNG API Keys
+     *
+     * - support env inject, use `TINYPNG_KEYS` to inject keys
+     * @default process.env.TINYPNG_KEYS
      */
     keys?: Arrayable<string> | (() => Awaitable<Arrayable<string>>)
   }
+
+  /**
+   * jsquash compressor config
+   *
+   * false to disable jsquash compressor
+   */
+  jsquash?: false | {
+    oxipng?: JsquashOxiPngOpts
+    mozjpeg?: JsquashMozJpegOpts
+    webp?: JsquashWebpOpts
+    avif?: JsquashAvifOpts
+  }
+
+  /** custom compressors */
+  compressors?: Compressor[]
 }
+
+export type ExcludeFalse<T extends Record<string, any>> = {
+  [K in keyof T]: Exclude<T[K], false>
+}
+
+export type Options = ExcludeFalse<UserOptions>
