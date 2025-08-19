@@ -2,15 +2,15 @@ import UA from 'user-agents'
 import { defineCompressor } from './compressor'
 
 export const _tinypng = defineCompressor({
-  test: /\.(png|jpg|jpeg|webp|avif)$/i,
-  compress: async (input) => {
+  name: '_tinypng',
+  test: /\.(?:png|jpg|jpeg|webp|avif)$/i,
+  compress: async (file) => {
     const headers = { 'X-Forwarded-For': randomIpv4(), 'User-Agent': randomUA() }
 
     const uploadResponse = await fetch('https://tinypng.com/backend/opt/shrink', {
       method: 'POST',
       headers: new Headers(headers),
-      duplex: 'half',
-      body: input,
+      body: file,
     })
 
     const data = await uploadResponse.json() as UploadResult
@@ -23,7 +23,7 @@ export const _tinypng = defineCompressor({
       }),
     })
 
-    return response.body!
+    return response.arrayBuffer()
   },
 })
 
