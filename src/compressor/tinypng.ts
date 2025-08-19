@@ -1,4 +1,4 @@
-import type { ExcludeFalse, Options } from '../types'
+import type { Options } from '../types'
 import { Buffer } from 'node:buffer'
 import { defineCompressor } from './compressor'
 
@@ -26,7 +26,7 @@ export const tinypng = defineCompressor(() => {
   }
 })
 
-async function parseApiKeys(keys?: NonNullable<ExcludeFalse<Options>['tinypng']>['keys']): Promise<string[]> {
+async function parseApiKeys(keys?: NonNullable<Options['tinypng']>['keys']): Promise<string[]> {
   if (typeof keys === 'function') {
     keys = await keys()
   }
