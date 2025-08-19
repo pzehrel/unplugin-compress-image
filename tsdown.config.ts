@@ -1,7 +1,7 @@
 import { defineConfig } from 'tsdown'
 
 export default defineConfig({
-  entry: ['src/test.ts'],
+  entry: ['src/*.ts', 'src/compressor/index.ts'],
   clean: true,
   loader: { '.wasm': 'asset' },
   noExternal: [/.*\.wasm$/],

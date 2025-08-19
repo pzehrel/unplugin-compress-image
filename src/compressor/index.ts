@@ -86,3 +86,6 @@ export async function compresses(filePaths: string[], options?: Options): Promis
   }
   return results
 }
+
+export { defineCompressor } from './compressor'
+export type { Compressor, SupportType } from './compressor'
