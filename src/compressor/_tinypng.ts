@@ -1,5 +1,5 @@
 import UA from 'user-agents'
-import { defineCompressor } from './compressor'
+import { defineCompressor } from './define'
 
 export const _tinypng = defineCompressor({
   name: '_tinypng',
