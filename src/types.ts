@@ -1,5 +1,6 @@
 import type { Compressor } from './compressor/compressor'
 import type { JsquashAvifOpts, JsquashMozJpegOpts, JsquashOxiPngOpts, JsquashWebpOpts } from './compressor/jsquash'
+import type { SvgoConfig } from './compressor/svgo'
 
 export type Awaitable<T> = T | Promise<T>
 export type Arrayable<T> = T | T[]
@@ -39,6 +40,8 @@ export interface UserOptions {
     webp?: JsquashWebpOpts
     avif?: JsquashAvifOpts
   }
+
+  svgo?: false | SvgoConfig
 
   /** custom compressors */
   compressors?: Compressor[]
