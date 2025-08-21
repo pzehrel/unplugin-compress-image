@@ -1,5 +1,5 @@
 import { optimize } from 'svgo'
-import { defineCompressor } from './compressor'
+import { defineCompressor } from './define'
 
 export const svgoCompressor = defineCompressor({
   name: 'svgo',

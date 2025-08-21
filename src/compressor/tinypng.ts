@@ -1,8 +1,8 @@
 import type { Options } from '../types'
 import { Buffer } from 'node:buffer'
-import { defineCompressor } from './compressor'
+import { defineCompressor } from './define'
 
-export const tinypng = defineCompressor(() => {
+export const tinypngCompressor = defineCompressor(() => {
   return {
     name: 'tinypng',
     test: ({ ext }, options) => options?.tinypng !== false && /\.(?:png|jpg|jpeg|webp|avif)$/i.test(ext),

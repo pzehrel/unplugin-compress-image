@@ -1,10 +1,10 @@
 import type { UnpluginFactory } from 'unplugin'
-import type { CompressResult } from './compressor'
+import type { CompressResult } from './compress'
 import type { Options } from './types'
 import { join } from 'node:path'
 import { createUnplugin } from 'unplugin'
 import { name as PKG_NAME } from '../package.json'
-import { compressOne } from './compressor'
+import { compressOne } from './compress'
 
 export const unpluginCompressImageFactory: UnpluginFactory<Options | undefined> = (options) => {
   let root = ''

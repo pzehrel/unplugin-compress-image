@@ -1,4 +1,4 @@
-import type { Compressor } from './compressor/compressor'
+import type { Compressor } from './compressor/define'
 import type { JsquashAvifOpts, JsquashMozJpegOpts, JsquashOxiPngOpts, JsquashWebpOpts } from './compressor/jsquash'
 import type { SvgoConfig } from './compressor/svgo'
 

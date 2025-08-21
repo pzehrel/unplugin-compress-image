@@ -1,4 +1,4 @@
-import { defineCompressor } from '../compressor'
+import { defineCompressor } from '../define'
 import { compressAvif } from './avif'
 import { compressMozJpeg } from './mozjpeg'
 import { compressOxiPng } from './oxipng'

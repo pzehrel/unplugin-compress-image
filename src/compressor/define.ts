@@ -1,6 +1,8 @@
 import type { FileTypeResult } from 'file-type'
+import type { Buffer } from 'node:buffer'
 import type { Awaitable, Options, UserOptions } from '../types'
-import type { FileDataType } from '../utils'
+
+export type FileDataType = Buffer | ArrayBuffer | Uint8Array
 
 export interface Compressor {
   name: string
