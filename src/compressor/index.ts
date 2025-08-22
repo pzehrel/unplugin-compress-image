@@ -20,12 +20,3 @@ export function runCompressorTest(compressor: Compressor, fileType: FileTypeResu
   }
   return typeof compressor.test === 'function' ? compressor.test(fileType, options) : compressor.test.test(fileType.ext)
 }
-
-/**
- * filter can use compressor by file type
- * @param fileType
- * @param compressors
- */
-export function filterCompressor(fileType: FileTypeResult, ...compressors: Compressor[]): Compressor[] {
-  return compressors.filter(compressor => runCompressorTest(compressor, fileType))
-}

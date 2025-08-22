@@ -7,12 +7,14 @@ export type Arrayable<T> = T | T[]
 
 export type FnAble<R, Args extends any[] = never[]> = R | ((...args: Args) => R)
 
-export interface UserOptions {
+export interface Options {
 
   /**
-   * tinypng compressor config
+   * TinyPNG compressor configuration
    *
-   * false to disable tinypng compressor
+   * Set to false to disable TinyPNG compressor
+   *
+   * @default false
    */
   tinypng?: false | {
     /**
@@ -23,16 +25,17 @@ export interface UserOptions {
     /**
      * TinyPNG API Keys
      *
-     * - support env inject, use `TINYPNG_KEYS` to inject keys
+     * - Supports environment variable injection; use `TINYPNG_KEYS` to inject keys
      * @default process.env.TINYPNG_KEYS
      */
     keys?: Arrayable<string> | (() => Awaitable<Arrayable<string>>)
   }
 
   /**
-   * jsquash compressor config
+   * Jsquash compressor configuration
    *
-   * false to disable jsquash compressor
+   * Set to false to disable Jsquash compressor
+   *
    */
   jsquash?: false | {
     oxipng?: JsquashOxiPngOpts
@@ -41,14 +44,38 @@ export interface UserOptions {
     avif?: JsquashAvifOpts
   }
 
+  /**
+   * SVGO compressor configuration
+   *
+   * Set to false to disable SVGO compressor
+   */
   svgo?: false | SvgoConfig
 
-  /** custom compressors */
+  /**
+   * Custom compressors
+   *
+   * You can use `defineCompressor` to define a custom compressor
+   */
   compressors?: Compressor[]
+
+  /**
+   * Enable cache
+   *
+   * If using TinyPNG or other remote compressors, it is recommended to enable cache
+   *
+   */
+  cache?: false | {
+    /**
+     * Cache directory
+     *
+     * @default '{cwd}/node_modules/.compress-image-cache'
+     */
+    dir?: string
+  }
 }
 
 export type ExcludeFalse<T extends Record<string, any>> = {
   [K in keyof T]: Exclude<T[K], false>
 }
 
-export type Options = ExcludeFalse<UserOptions>
+// export type Options = ExcludeFalse<UserOptions>
