@@ -14,6 +14,9 @@ export const jsquashCompressor = defineCompressor(() => {
     name: 'jsquash',
     test: /\.(jpe?g|png|webp|avif)$/i,
     compress: async (file, fileType, options) => {
+      if (options?.jsquash === false) {
+        return false
+      }
       let output: ArrayBuffer
 
       switch (fileType.ext) {

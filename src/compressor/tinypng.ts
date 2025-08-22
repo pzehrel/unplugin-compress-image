@@ -1,12 +1,16 @@
-import type { Options } from '../types'
+import type { ExcludeFalse, Options } from '../types'
 import { Buffer } from 'node:buffer'
 import { defineCompressor } from './define'
 
 export const tinypngCompressor = defineCompressor(() => {
   return {
     name: 'tinypng',
-    test: ({ ext }, options) => options?.tinypng !== false && /\.(?:png|jpg|jpeg|webp|avif)$/i.test(ext),
+    test: /\.(?:png|jpe?g|webp|avif)$/,
     compress: async (file, _, options) => {
+      if (options?.tinypng === false) {
+        return false
+      }
+
       // TODO: 需要支持多个 API Key 的轮询
       const keys = (await parseApiKeys(options?.tinypng?.keys))
       const api = options?.tinypng?.api ?? 'https://api.tinify.com/shrink'
@@ -26,7 +30,7 @@ export const tinypngCompressor = defineCompressor(() => {
   }
 })
 
-async function parseApiKeys(keys?: NonNullable<Options['tinypng']>['keys']): Promise<string[]> {
+async function parseApiKeys(keys?: NonNullable<ExcludeFalse<Options>['tinypng']>['keys']): Promise<string[]> {
   if (typeof keys === 'function') {
     keys = await keys()
   }
