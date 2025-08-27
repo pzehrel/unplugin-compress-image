@@ -72,6 +72,12 @@ export interface Options {
      */
     dir?: string
   }
+
+  /**
+   * show logger
+   * @default true
+   */
+  logger?: boolean
 }
 
 export type ExcludeFalse<T extends Record<string, any>> = {
