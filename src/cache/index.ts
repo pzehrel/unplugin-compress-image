@@ -1,7 +1,9 @@
 import type { Buffer } from 'node:buffer'
+import type { FileDataType } from '../compressor'
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'pathe'
+import { toBuffer } from '../utils'
 
 export class CompressCache {
   public readonly dir: string
@@ -16,7 +18,8 @@ export class CompressCache {
    * @param source source file md5 or buffer
    * @param compressed compressed file buffer
    */
-  save(source: string | Buffer, compressed: Buffer): void {
+  save(source: string | FileDataType, compressed: FileDataType): void {
+    compressed = toBuffer(compressed)
     if (!this.same(source, compressed)) {
       const cacheFile = this.getFilePath(source)
       writeFileSync(cacheFile, compressed)
@@ -27,7 +30,7 @@ export class CompressCache {
    * Get compressed file from cache
    * @param source source file md5 or buffer
    */
-  get(source: string | Buffer): Buffer | undefined {
+  get(source: string | FileDataType): Buffer | undefined {
     const filename = this.md5(source)
     if (!existsSync(join(this.dir, filename))) {
       return undefined
@@ -42,7 +45,8 @@ export class CompressCache {
    * @param source source file md5 or buffer
    * @param compressed compressed file buffer
    */
-  same(source: string | Buffer, compressed: Buffer): boolean {
+  same(source: string | FileDataType, compressed: FileDataType): boolean {
+    compressed = toBuffer(compressed)
     return this.get(source)?.equals(compressed) ?? false
   }
 
@@ -50,7 +54,7 @@ export class CompressCache {
    * Check if the cache has the compressed file
    * @param source source file md5 or buffer
    */
-  has(source: string | Buffer): boolean {
+  has(source: string | FileDataType): boolean {
     const filename = this.md5(source)
     return existsSync(join(this.dir, filename))
   }
@@ -63,14 +67,15 @@ export class CompressCache {
     return this.get(source)?.byteLength ?? 0
   }
 
-  private md5(file: string | Buffer): string {
+  private md5(file: string | FileDataType): string {
     if (typeof file === 'string') {
       return file
     }
+    file = toBuffer(file)
     return createHash('md5').update(file).digest('hex')
   }
 
-  private getFilePath(file: string | Buffer): string {
+  private getFilePath(file: string | FileDataType): string {
     return join(this.dir, this.md5(file))
   }
 }
