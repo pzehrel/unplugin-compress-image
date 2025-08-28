@@ -23,7 +23,7 @@ export function runCompressorTest(compressor: Compressor, fileType: FileTypeResu
   if (!compressor.test) {
     return true
   }
-  return typeof compressor.test === 'function' ? compressor.test(fileType, options) : compressor.test.test(fileType.ext)
+  return typeof compressor.test === 'function' ? compressor.test(fileType, options) : compressor.test.test(`.${fileType.ext}`)
 }
 
 /**
@@ -60,7 +60,7 @@ export async function runCompressorsByBestSize(
     return new CompressError('File type not recognized')
   }
 
-  const compressors = [...options?.compressors || [], jsquashCompressor, tinypngCompressor, svgoCompressor]
+  const compressors = [...options?.compressors || [], jsquashCompressor, svgoCompressor]
   const usedCompressors = compressors.filter(compressor => runCompressorTest(compressor, fileType, options))
 
   const queue = usedCompressors.map(async (compressor) => {

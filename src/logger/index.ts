@@ -25,8 +25,7 @@ export class CompressLogger {
         before: 'before' in item ? item.before : '-',
         after: 'after' in item ? item.after : '-',
         compressor: 'compressor' in item ? item.compressor : '-',
-        reason: 'error' in item ? item.error.message : '-',
-        state: 'error' in item ? 'fail' : 'success',
+        state: 'error' in item ? `fail: ${item.error.message}` : 'success',
       }
     })
 

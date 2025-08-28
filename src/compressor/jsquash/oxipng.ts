@@ -13,8 +13,15 @@ async function install(): Promise<any> {
   return installPromise
 }
 
+const DEFAULTS: Partial<OptimiseOptions> = {
+  level: 2,
+  interlace: false,
+  optimiseAlpha: true,
+}
+
 export async function compressOxiPng(input: ArrayBuffer, opts?: Partial<OptimiseOptions>): Promise<ArrayBuffer> {
   await install()
+  opts = Object.assign({}, DEFAULTS, opts)
   return optimise(input, opts)
 }
 

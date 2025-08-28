@@ -19,7 +19,7 @@ export const jsquashCompressor = defineCompressor(() => {
       }
       let output: ArrayBuffer
 
-      switch (fileType.ext) {
+      switch (fileType.mime) {
         case 'image/jpeg':
         case 'image/jpg':
           output = await compressMozJpeg(file, options?.jsquash?.mozjpeg)
