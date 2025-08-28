@@ -40,11 +40,12 @@ export async function compress(opts: CompressOpts): Promise<Result> {
   const tasks = Object.entries(sources).map<() => Promise<Success | Fail>>(([filepath, source]) => async () => {
     const cacheFile = cache?.get(source)
     if (cacheFile) {
-      logger.push({ id: filepath, before: source.byteLength, after: source.byteLength, compressor: 'cache' })
+      logger.push({ id: filepath, before: source.byteLength, after: cacheFile.byteLength, compressor: 'cache' })
       return { filepath, source, dest: cacheFile, compressor: 'cache' }
     }
 
     const dest = await runCompressorsByBestSize(source, options)
+
     if (CompressError.is(dest)) {
       logger.push({ id: filepath, error: dest })
       return { filepath, source, error: dest }
@@ -55,7 +56,9 @@ export async function compress(opts: CompressOpts): Promise<Result> {
     return { filepath, source, dest: file, compressor }
   })
 
-  const files = (await runParallel(tasks, task => task())).filter(r => 'dest' in r)
+  const files = (await Promise.all(tasks.map(task => task()))).filter(r => 'dest' in r)
+
+  // const files = (await runParallel(tasks, task => task())).filter(r => 'dest' in r)
 
   return { files, logger }
 }
