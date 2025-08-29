@@ -1,11 +1,11 @@
-import type { VitePlugin } from 'unplugin'
+import type { RollupPlugin } from 'unplugin'
 import type { Options } from '../types'
 import MagicString from 'magic-string'
 import { compressOne } from '../compress'
 import { CompressLogger } from '../logger'
 import { toBase64 } from '../utils'
 
-export function createVitePlugin(options?: Options): Partial<VitePlugin> {
+export function createRollupPlugin(options?: Options): Partial<RollupPlugin> {
   const logger = new CompressLogger()
 
   return {
