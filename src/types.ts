@@ -78,6 +78,9 @@ export interface Options {
    * @default true
    */
   logger?: boolean
+
+  /** Find base64 images in the code and compress and replace them. */
+  base64?: boolean
 }
 
 export type ExcludeFalse<T extends Record<string, any>> = {
