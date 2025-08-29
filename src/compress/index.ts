@@ -1,13 +1,11 @@
 import type { FileTypeResult } from 'file-type'
-import type { Buffer } from 'node:buffer'
 import type { Compressor, FileDataType } from '../compressor'
 import type { CompressLogger } from '../logger'
 import type { Options } from '../types'
-import { readFileSync } from 'node:fs'
 import { fileTypeFromBuffer } from 'file-type'
 import { CompressCache } from '../cache'
 import { runCompressorsByBestSize } from '../compressor'
-import { CompressError, getFileSize } from '../utils'
+import { CompressError, size } from '../utils'
 
 export interface CompressOpts {
   root: string
@@ -22,7 +20,7 @@ interface Success {
   /** source file */
   source: FileDataType
   /** optimized file */
-  optimized: Buffer
+  optimized: Uint8Array
   /** real file type */
   fileType: FileTypeResult
   /** which compressor */
@@ -43,7 +41,7 @@ export async function compress({ root, options, sources, logger }: CompressOpts)
   const tasks = Object.entries(sources).map<() => Promise<Success | Fail>>(([filepath, source]) => async () => {
     const cacheFile = cache?.get(source)
     if (cacheFile) {
-      logger?.push({ id: filepath, before: getFileSize(source), after: cacheFile.byteLength, compressor: 'cache' })
+      logger?.push({ id: filepath, before: size(source), after: cacheFile.byteLength, compressor: 'cache' })
       return { filepath, source, optimized: cacheFile, compressor: 'cache', fileType: (await fileTypeFromBuffer(cacheFile))! }
     }
 
@@ -55,7 +53,7 @@ export async function compress({ root, options, sources, logger }: CompressOpts)
     }
     const { file, compressor, fileType } = dest
     cache?.save(source, file)
-    logger?.push({ id: filepath, before: getFileSize(source), after: file.byteLength, compressor: compressor.name })
+    logger?.push({ id: filepath, before: size(source), after: file.byteLength, compressor: compressor.name })
     return { filepath, source, optimized: file, compressor, fileType }
   })
 
@@ -70,7 +68,7 @@ interface CompressOneOpts {
   options?: Options
   logger?: CompressLogger
 }
-export async function compressOne({ id, source, options, logger }: CompressOneOpts): Promise<Buffer | null> {
+export async function compressOne({ id, source, options, logger }: CompressOneOpts): Promise<Uint8Array | null> {
   const result = await runCompressorsByBestSize(source, options || {})
 
   if (CompressError.is(result)) {
@@ -79,6 +77,6 @@ export async function compressOne({ id, source, options, logger }: CompressOneOp
   }
 
   const { file, compressor } = result
-  logger?.push({ id, before: getFileSize(source), after: file.byteLength, compressor: compressor.name })
+  logger?.push({ id, before: size(source), after: file.byteLength, compressor: compressor.name })
   return file
 }

@@ -25,31 +25,26 @@ export class CompressError extends Error {
   }
 }
 
-export function toBuffer(file: FileDataType): Buffer {
+export function toU8Buffer(file: FileDataType): Uint8Array {
   if (typeof file === 'string') {
-    // base64
     const base64 = file.replace(/^data:\w+\/[a-zA-Z+\-.]+;base64,/, '')
-    return Buffer.from(base64, 'base64')
+    return Uint8Array.from(Buffer.from(base64, 'base64'))
   }
 
   if (file instanceof ArrayBuffer) {
-    return Buffer.from(new Uint8Array(file))
+    return new Uint8Array(file)
   }
 
-  if (file instanceof Uint8Array) {
-    return Buffer.from(file)
-  }
   return file
 }
 
 export function toArrayBuffer(file: FileDataType): ArrayBuffer {
   if (typeof file === 'string') {
-    // base64
     const base64 = file.replace(/^data:\w+\/[a-zA-Z+\-.]+;base64,/, '')
     file = Buffer.from(base64, 'base64')
   }
 
-  if (file instanceof Buffer || file instanceof Uint8Array) {
+  if (file instanceof Uint8Array) {
     return file.buffer.slice(file.byteOffset, file.byteOffset + file.byteLength) as ArrayBuffer
   }
   return file
@@ -63,8 +58,8 @@ export function toBase64(file: FileDataType, fileType?: FileTypeResult): Base64 
   }
 
   if (fileType) {
-    const buffer = toBuffer(file)
-    const b64 = buffer.toString('base64')
+    const buffer = toU8Buffer(file)
+    const b64 = Buffer.from(buffer).toString('base64')
     return `data:${fileType.mime};base64,${b64}`
   }
 
@@ -76,9 +71,9 @@ export function toBase64(file: FileDataType, fileType?: FileTypeResult): Base64 
   }) as Promise<Base64>
 }
 
-export function getFileSize(file: FileDataType): number {
+export function size(file: FileDataType): number {
   if (typeof file === 'string') {
-    const buffer = toBuffer(file)
+    const buffer = toU8Buffer(file)
     return buffer.byteLength
   }
 
