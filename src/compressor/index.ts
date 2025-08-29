@@ -2,7 +2,7 @@ import type { FileTypeResult } from 'file-type'
 import type { Buffer } from 'node:buffer'
 import type { Options } from '../types'
 import type { Compressor, CompressorOptions, FileDataType } from './define'
-import { fileTypeFromBuffer } from 'file-type'
+import { fileTypeFromBlob, fileTypeFromBuffer } from 'file-type'
 import { CompressError, toArrayBuffer, toBuffer } from '../utils'
 import { jsquashCompressor } from './jsquash'
 import { svgoCompressor } from './svgo'
@@ -33,7 +33,7 @@ export function runCompressorTest(compressor: Compressor, fileType: FileTypeResu
  * @param fileType The file type of the source file.
  * @param options Optional compression options.
  */
-export async function runCompressor(compressor: Compressor, source: FileDataType, fileType: FileTypeResult, options: CompressorOptions): Promise<Buffer | false> {
+export async function runCompressor(compressor: Compressor, source: FileDataType, fileType: FileTypeResult, options: Options): Promise<Buffer | false> {
   source = toArrayBuffer(source)
   const result = await compressor.compress(source, fileType, options)
 
@@ -45,16 +45,15 @@ export async function runCompressor(compressor: Compressor, source: FileDataType
 
 /**
  * run multiple compressors and return the best result (smallest size).
- * @param usedCompressors array of compressors to run
- * @param filePath file id (for error reporting)
  * @param source source file
- * @param fileType source file type
  * @param options optional compression options
  */
 export async function runCompressorsByBestSize(
   source: FileDataType,
-  options: CompressorOptions,
-): Promise<CompressError | { file: Buffer, compressor: Compressor }> {
+  options: Options,
+): Promise<CompressError | { file: Buffer, compressor: Compressor, fileType: FileTypeResult }> {
+  source = toArrayBuffer(source)
+
   const fileType = await fileTypeFromBuffer(source)
   if (!fileType) {
     return new CompressError('File type not recognized')
@@ -98,5 +97,5 @@ export async function runCompressorsByBestSize(
     return new CompressError('No compressor succeeded')
   }
 
-  return { file: best!, compressor: bestCompressor! }
+  return { file: best!, compressor: bestCompressor!, fileType: fileType! }
 }
