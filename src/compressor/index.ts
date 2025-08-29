@@ -1,12 +1,10 @@
 import type { FileTypeResult } from 'file-type'
-import type { Buffer } from 'node:buffer'
 import type { Options } from '../types'
-import type { Compressor, CompressorOptions, FileDataType } from './define'
-import { fileTypeFromBlob, fileTypeFromBuffer } from 'file-type'
-import { CompressError, toArrayBuffer, toBuffer } from '../utils'
+import type { Compressor, FileDataType } from './define'
+import { fileTypeFromBuffer } from 'file-type'
+import { CompressError, toArrayBuffer, toU8Buffer } from '../utils'
 import { jsquashCompressor } from './jsquash'
 import { svgoCompressor } from './svgo'
-import { tinypngCompressor } from './tinypng'
 
 export * from './define'
 export * from './jsquash'
@@ -33,14 +31,14 @@ export function runCompressorTest(compressor: Compressor, fileType: FileTypeResu
  * @param fileType The file type of the source file.
  * @param options Optional compression options.
  */
-export async function runCompressor(compressor: Compressor, source: FileDataType, fileType: FileTypeResult, options: Options): Promise<Buffer | false> {
+export async function runCompressor(compressor: Compressor, source: FileDataType, fileType: FileTypeResult, options: Options): Promise<Uint8Array | false> {
   source = toArrayBuffer(source)
   const result = await compressor.compress(source, fileType, options)
 
   if (result === false) {
     return false
   }
-  return toBuffer(result)
+  return toU8Buffer(result)
 }
 
 /**
@@ -51,7 +49,7 @@ export async function runCompressor(compressor: Compressor, source: FileDataType
 export async function runCompressorsByBestSize(
   source: FileDataType,
   options: Options,
-): Promise<CompressError | { file: Buffer, compressor: Compressor, fileType: FileTypeResult }> {
+): Promise<CompressError | { file: Uint8Array, compressor: Compressor, fileType: FileTypeResult }> {
   source = toArrayBuffer(source)
 
   const fileType = await fileTypeFromBuffer(source)
@@ -68,7 +66,7 @@ export async function runCompressorsByBestSize(
   })
   const results = await Promise.allSettled(queue)
 
-  let best: Buffer | undefined
+  let best: Uint8Array | undefined
   let bestCompressor: Compressor | undefined
   let error: CompressError | undefined
 
