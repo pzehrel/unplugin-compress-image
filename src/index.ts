@@ -1,14 +1,16 @@
-import type { UnpluginFactory } from 'unplugin'
+import type { RolldownPlugin, UnpluginFactory } from 'unplugin'
 import type { Options } from './types'
 import { createUnplugin } from 'unplugin'
 import { name as PKG_NAME } from '../package.json'
-import { createVitePlugin } from './builder/vite'
+import { createRollupPlugin } from './builder/rollup'
 import { createWebpackPlugin } from './builder/webpack'
 
 export const unpluginCompressImageFactory: UnpluginFactory<Options | undefined> = (options) => {
   return {
     name: PKG_NAME,
-    vite: createVitePlugin(options),
+    rollup: createRollupPlugin(options),
+    vite: createRollupPlugin(options),
+    rolldown: createRollupPlugin(options) as Partial<RolldownPlugin>,
     webpack: createWebpackPlugin(options, PKG_NAME),
   }
 }
