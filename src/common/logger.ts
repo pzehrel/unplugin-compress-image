@@ -1,4 +1,4 @@
-import { CompressError } from '../core'
+import { CompressError } from '../utils'
 
 interface Success {
   success: true

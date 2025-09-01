@@ -1,9 +1,9 @@
 import type { Buffer } from 'node:buffer'
-import type { FileDataType } from '../core/types'
+import type { FileDataType } from '../types'
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'pathe'
-import { toUnit8Array } from '../core'
+import { toUnit8Array } from '../utils'
 
 export class CompressCache {
   public readonly dir: string
