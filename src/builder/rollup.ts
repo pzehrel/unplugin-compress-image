@@ -2,7 +2,7 @@ import type { RollupPlugin } from 'unplugin'
 import type { Options } from '../types'
 import process from 'node:process'
 import { CompressLogger } from '../common'
-import { compress } from '../compressor'
+import { compress, initCompressors } from '../compressor'
 
 export function createRollupPlugin(options?: Options): Partial<RollupPlugin> {
   const logger = options?.logger === false ? undefined : new CompressLogger()
@@ -10,6 +10,9 @@ export function createRollupPlugin(options?: Options): Partial<RollupPlugin> {
   const root = process.cwd()
 
   return {
+    buildStart() {
+      initCompressors(options)
+    },
     async generateBundle(_, bundle) {
       const queue: Promise<any>[] = []
 

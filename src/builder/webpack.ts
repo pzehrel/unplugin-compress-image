@@ -3,7 +3,7 @@ import type { Options } from '../types'
 import { Buffer } from 'node:buffer'
 import { relative } from 'node:path'
 import { CompressLogger } from '../common'
-import { compress } from '../compressor'
+import { compress, initCompressors } from '../compressor'
 
 export function createWebpackPlugin(options: Options | undefined, PKG_NAME: string): (compiler: WebpackCompiler) => void {
   const logger = options?.logger === false ? undefined : new CompressLogger()
@@ -14,6 +14,7 @@ export function createWebpackPlugin(options: Options | undefined, PKG_NAME: stri
         { name: PKG_NAME, stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE },
         async (assets, callback) => {
           const root = compiler.context
+          initCompressors(options)
 
           const queue = Object.entries(assets).map(async ([absolute, asset]) => {
             const id = relative(root, absolute)
