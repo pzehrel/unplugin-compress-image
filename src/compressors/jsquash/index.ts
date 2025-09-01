@@ -9,7 +9,7 @@ export type * from './types'
 
 export const jsquash = defineCompressor<'jsquash'>({
   name: 'jsquash',
-  use: /^image\/(jpe?g|png|webp|avif)/i,
+  use: /(jpe?g|png|webp|avif)$/i,
   compress: async (input, fileType, options) => {
     const source = toArrayBuffer(input)
     let output: ArrayBuffer

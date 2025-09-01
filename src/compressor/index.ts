@@ -33,6 +33,7 @@ interface CompressOptions<S = FileDataType | MagicString> {
   source: S
   options?: Options
   logger?: CompressLogger
+  root: string
 }
 
 interface CompressResult<S = Uint8Array | MagicString> {
@@ -197,7 +198,9 @@ function canUse(compressor: Compressor, fileType: FileTypeResult, options?: Opti
   if (typeof compressor.use === 'function') {
     return compressor.use(fileType)
   }
-  return compressor.use.test(fileType.mime)
+  return compressor.use.test(fileType.ext)
+    || compressor.use.test(fileType.mime)
+    || compressor.use.test(`.${fileType.ext}`)
 }
 
 function runAwaitable<R>(fn: () => R | Promise<R>): Promise<R> {

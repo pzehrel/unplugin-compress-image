@@ -18,7 +18,7 @@ export function createWebpackPlugin(options: Options | undefined, PKG_NAME: stri
           const queue = Object.entries(assets).map(async ([absolute, asset]) => {
             const id = relative(root, absolute)
             const source = asset.source()
-            const result = await compress({ id, source, options, logger })
+            const result = await compress({ id, source, options, logger, root })
             if (result.data && result.rate < 1) {
               const buffer = Buffer.from(result.data)
               compilation.updateAsset(absolute, new compiler.webpack.sources.RawSource(buffer))
