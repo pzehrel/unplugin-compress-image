@@ -1,10 +1,9 @@
-import { Buffer } from 'node:buffer'
 import { defineCompressor } from '../compressor'
 
 export const tinypng = defineCompressor<'tinypng'>((options) => {
   return {
     name: 'tinypng',
-    use: /image\/(?:png|jpe?g|webp|avif)/,
+    use: /png|jpe?g|webp|avif$/,
     compress: async (file, _, options) => {
       // TODO: 需要支持多个 API Key 的轮询
       // const keys = (await parseApiKeys(options?.tinypng?.keys))

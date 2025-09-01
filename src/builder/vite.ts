@@ -1,15 +1,18 @@
-import type { RollupPlugin } from 'unplugin'
+import type { VitePlugin } from 'unplugin'
 import type { Options } from '../types'
 import process from 'node:process'
 import { CompressLogger } from '../common'
 import { compress } from '../compressor'
 
-export function createRollupPlugin(options?: Options): Partial<RollupPlugin> {
+export function createVitePlugin(options?: Options): Partial<VitePlugin> {
   const logger = options?.logger === false ? undefined : new CompressLogger()
 
-  const root = process.cwd()
+  let root = process.cwd()
 
   return {
+    configResolved(config) {
+      root = config.root
+    },
     async generateBundle(_, bundle) {
       const queue: Promise<any>[] = []
 
