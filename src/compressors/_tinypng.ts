@@ -3,7 +3,7 @@ import { defineCompressor } from './define'
 
 export const _tinypng = defineCompressor({
   name: '_tinypng',
-  test: /\.(?:png|jpg|jpeg|webp|avif)$/i,
+  test: /image\/(?:png|jpg|jpeg|webp|avif)/i,
   compress: async (file) => {
     const headers = { 'X-Forwarded-For': randomIpv4(), 'User-Agent': randomUA() }
 

@@ -1,11 +1,12 @@
 import type { WebpackCompiler } from 'unplugin'
-import type { FileDataType } from '../compressor'
 import type { Options } from '../types'
-import { compress } from '../compress'
-import { CompressLogger } from '../logger'
+import { Buffer } from 'node:buffer'
+import { relative } from 'node:path'
+import { CompressLogger } from '../common'
+import { compress } from '../compressor'
 
 export function createWebpackPlugin(options: Options | undefined, PKG_NAME: string): (compiler: WebpackCompiler) => void {
-  const logger = new CompressLogger()
+  const logger = options?.logger === false ? undefined : new CompressLogger()
 
   return (compiler) => {
     compiler.hooks.thisCompilation.tap(PKG_NAME, (compilation) => {
@@ -14,27 +15,25 @@ export function createWebpackPlugin(options: Options | undefined, PKG_NAME: stri
         async (assets, callback) => {
           const root = compiler.context
 
-          const sources = Object.entries(assets).reduce((acc, [filepath, asset]) => {
+          const queue = Object.entries(assets).map(async ([absolute, asset]) => {
+            const id = relative(root, absolute)
             const source = asset.source()
-            if (typeof source !== 'string') {
-              acc[filepath] = source
-            }
-            return acc
-          }, {} as Record<string, FileDataType>)
-
-          const files = await compress({ root, sources, options, logger })
-          files.forEach(({ filepath, optimized }) => {
-            if (assets[filepath]) {
-              compilation.updateAsset(filepath, new compiler.webpack.sources.RawSource(optimized))
+            const result = await compress({ id, source, options, logger })
+            if (result.data && result.rate < 1) {
+              const buffer = Buffer.from(result.data)
+              compilation.updateAsset(absolute, new compiler.webpack.sources.RawSource(buffer))
             }
           })
+
+          await Promise.all(queue)
+
           callback()
         },
       )
     })
 
     compiler.hooks.done.tap(PKG_NAME, () => {
-      logger.table()
+      // logger.table()
     })
   }
 }
