@@ -5,5 +5,6 @@ export default antfu({
 
   rules: {
     'ts/ban-ts-comment': 'off',
+    'ts/no-namespace': 'off',
   },
 })

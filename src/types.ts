@@ -1,11 +1,14 @@
-import type { Compressor } from './compressor/define'
-import type { JsquashAvifOpts, JsquashMozJpegOpts, JsquashOxiPngOpts, JsquashWebpOpts } from './compressor/jsquash'
-import type { SvgoConfig } from './compressor/svgo'
+import type MagicString from 'magic-string'
+import type { Compressor, CompressorFn } from './compressor'
+import type { JsquashOptions, SvgoConfig, TinyPngOptions } from './compressors'
 
-export type Awaitable<T> = T | Promise<T>
-export type Arrayable<T> = T | T[]
+export type Base64 = `data:${string}/${string};base64,${string}` | (string & {})
 
-export type FnAble<R, Args extends any[] = never[]> = R | ((...args: Args) => R)
+/** js code or css code */
+export type Code = (string & {}) | MagicString
+
+/** supports file type */
+export type FileDataType = ArrayBuffer | Uint8Array | Base64
 
 export interface Options {
 
@@ -16,20 +19,7 @@ export interface Options {
    *
    * @default false
    */
-  tinypng?: false | {
-    /**
-     * TinyPNG API Endpoint
-     * @default 'https://api.tinify.com/shrink'
-     */
-    api?: string
-    /**
-     * TinyPNG API Keys
-     *
-     * - Supports environment variable injection; use `TINYPNG_KEYS` to inject keys
-     * @default process.env.TINYPNG_KEYS
-     */
-    keys?: Arrayable<string> | (() => Awaitable<Arrayable<string>>)
-  }
+  tinypng?: false | TinyPngOptions
 
   /**
    * Jsquash compressor configuration
@@ -37,12 +27,7 @@ export interface Options {
    * Set to false to disable Jsquash compressor
    *
    */
-  jsquash?: false | {
-    oxipng?: JsquashOxiPngOpts
-    mozjpeg?: JsquashMozJpegOpts
-    webp?: JsquashWebpOpts
-    avif?: JsquashAvifOpts
-  }
+  jsquash?: false | JsquashOptions
 
   /**
    * SVGO compressor configuration
@@ -56,7 +41,7 @@ export interface Options {
    *
    * You can use `defineCompressor` to define a custom compressor
    */
-  compressors?: Compressor[]
+  compressors?: (Compressor | CompressorFn)[]
 
   /**
    * Enable cache
@@ -79,12 +64,12 @@ export interface Options {
    */
   logger?: boolean
 
-  /** Find base64 images in the code and compress and replace them. */
+  /**
+   * Compress base64-formatted images in js/css files
+   *
+   * only rollup similar builder supports this feature currently
+   *
+   * @default true
+   */
   base64?: boolean
 }
-
-export type ExcludeFalse<T extends Record<string, any>> = {
-  [K in keyof T]: Exclude<T[K], false>
-}
-
-// export type Options = ExcludeFalse<UserOptions>

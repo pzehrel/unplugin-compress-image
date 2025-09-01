@@ -1,9 +1,9 @@
 import type { Buffer } from 'node:buffer'
-import type { FileDataType } from '../compressor'
+import type { FileDataType } from '../core/types'
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'pathe'
-import { toU8Buffer } from '../utils'
+import { toUnit8Array } from '../core'
 
 export class CompressCache {
   public readonly dir: string
@@ -19,7 +19,7 @@ export class CompressCache {
    * @param compressed compressed file buffer
    */
   save(source: string | FileDataType, compressed: FileDataType): void {
-    compressed = toU8Buffer(compressed)
+    compressed = toUnit8Array(compressed)
     if (!this.same(source, compressed)) {
       const cacheFile = this.getFilePath(source)
       writeFileSync(cacheFile, compressed)
@@ -46,7 +46,7 @@ export class CompressCache {
    * @param compressed compressed file buffer
    */
   same(source: string | FileDataType, compressed: FileDataType): boolean {
-    compressed = toU8Buffer(compressed)
+    compressed = toUnit8Array(compressed)
     return this.get(source)?.equals(compressed) ?? false
   }
 
@@ -71,7 +71,7 @@ export class CompressCache {
     if (typeof file === 'string') {
       return file
     }
-    file = toU8Buffer(file)
+    file = toUnit8Array(file)
     return createHash('md5').update(file).digest('hex')
   }
 
