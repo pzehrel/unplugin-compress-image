@@ -5,13 +5,12 @@ import { CompressLogger } from '../common'
 import { compress, initCompressors } from '../compressor'
 
 export function createRollupPlugin(options?: Options): Partial<RollupPlugin> {
-  const logger = options?.logger === false ? undefined : new CompressLogger()
-
   const root = process.cwd()
 
   return {
     buildStart() {
       initCompressors(options)
+      CompressLogger.createFromOptions(options)
     },
     async generateBundle(_, bundle) {
       const queue: Promise<any>[] = []
@@ -21,7 +20,7 @@ export function createRollupPlugin(options?: Options): Partial<RollupPlugin> {
         if ((file.type === 'asset' && typeof file.source !== 'string') || (file.type === 'chunk' && typeof file.code === 'string')) {
           const id = file.fileName
           const source = file.type === 'asset' ? file.source : file.code
-          const promise = compress({ id, source, options, logger, root })
+          const promise = compress({ id, source, options, root })
           promise.then((result) => {
             if (result.data && result.rate < 1) {
               if (file.type === 'chunk') {

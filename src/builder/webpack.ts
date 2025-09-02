@@ -6,8 +6,6 @@ import { CompressLogger } from '../common'
 import { compress, initCompressors } from '../compressor'
 
 export function createWebpackPlugin(options: Options | undefined, PKG_NAME: string): (compiler: WebpackCompiler) => void {
-  const logger = options?.logger === false ? undefined : new CompressLogger()
-
   return (compiler) => {
     compiler.hooks.thisCompilation.tap(PKG_NAME, (compilation) => {
       compilation.hooks.processAssets.tapAsync(
@@ -15,11 +13,12 @@ export function createWebpackPlugin(options: Options | undefined, PKG_NAME: stri
         async (assets, callback) => {
           const root = compiler.context
           initCompressors(options)
+          CompressLogger.createFromOptions(options)
 
           const queue = Object.entries(assets).map(async ([absolute, asset]) => {
             const id = relative(root, absolute)
             const source = asset.source()
-            const result = await compress({ id, source, options, logger, root })
+            const result = await compress({ id, source, options, root })
             if (result.data && result.rate < 1) {
               const buffer = Buffer.from(result.data)
               compilation.updateAsset(absolute, new compiler.webpack.sources.RawSource(buffer))

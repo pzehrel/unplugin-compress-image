@@ -1,11 +1,12 @@
 import type { FileTypeResult } from 'file-type'
 import type { Base64, Code, FileDataType } from '../types'
 import { Buffer } from 'node:buffer'
+import { fileTypeFromBuffer } from 'file-type'
 import MagicString from 'magic-string'
 
 export * from './error'
 
-export function isBinary(data: unknown): data is Uint8Array | ArrayBuffer {
+export function isBinary(data: unknown): data is FileDataType {
   return data instanceof Uint8Array || data instanceof ArrayBuffer
 }
 
@@ -30,7 +31,7 @@ export function removeBase64Meta(data: Base64): string {
   return data.replace(/^data:\w+\/[a-zA-Z+\-.]+;base64,/, '')
 }
 
-export function toUnit8Array(data: FileDataType): Uint8Array {
+export function toUnit8Array(data: FileDataType | Base64): Uint8Array {
   if (isBase64(data)) {
     return Uint8Array.from(Buffer.from(removeBase64Meta(data), 'base64'))
   }
@@ -42,7 +43,7 @@ export function toUnit8Array(data: FileDataType): Uint8Array {
   return data
 }
 
-export function toArrayBuffer(data: FileDataType): ArrayBuffer {
+export function toArrayBuffer(data: FileDataType | Base64): ArrayBuffer {
   if (isBase64(data)) {
     return Buffer.from(removeBase64Meta(data), 'base64').buffer
   }
@@ -54,16 +55,29 @@ export function toArrayBuffer(data: FileDataType): ArrayBuffer {
   return data
 }
 
-export function toBase64(data: FileDataType): Base64 {
+export async function toBase64(data: FileDataType | Base64, fileType?: FileTypeResult): Promise<Base64> {
+  if (isBase64(data) || typeof data === 'string') {
+    return data
+  }
+
+  let b64: string = ''
   if (data instanceof Uint8Array) {
-    return Buffer.from(data).toString('base64')
+    b64 = Buffer.from(data).toString('base64')
   }
 
   if (data instanceof ArrayBuffer) {
-    return Buffer.from(new Uint8Array(data)).toString('base64')
+    b64 = Buffer.from(new Uint8Array(data)).toString('base64')
   }
 
-  return data
+  if (!fileType) {
+    fileType = await fileTypeFromBuffer(data)
+    if (!fileType) {
+      return b64 as Base64
+    }
+  }
+
+  const meta = `data:${fileType.mime};base64,`
+  return (meta + b64) as Base64
 }
 
 export function computedRate(beforeSize: number, afterSize: number): number {

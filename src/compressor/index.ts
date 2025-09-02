@@ -1,11 +1,10 @@
 import type { FileTypeResult } from 'file-type'
-import type { CompressLogger } from '../common'
-import type { Code, FileDataType, Options } from '../types'
+import type { Base64, Code, FileDataType, Options } from '../types'
 import type { Compressor, CompressorFn, CompressorFnContext } from './types'
 import { fileTypeFromBuffer } from 'file-type'
 import MagicString from 'magic-string'
 import { builtInCompressors } from '../compressors'
-import { _contextUtils, CompressError, computedRate, isCode, toUnit8Array } from '../utils'
+import { _contextUtils, CompressError, isBinary, toBase64, toUnit8Array } from '../utils'
 
 export * from './types'
 
@@ -28,78 +27,55 @@ export function initCompressors(options?: Options): void {
   }
 }
 
-interface CompressOptions<S = FileDataType | MagicString> {
+interface CompressOptions<Source extends FileDataType | Code> {
   id: string
-  source: S
+  source: Source
   options?: Options
-  logger?: CompressLogger
   root: string
 }
 
-interface CompressResult<S = Uint8Array | MagicString> {
+interface CompressResult<S extends FileDataType | Code> {
   id: string
-  rate: number
-  data?: S
+  data?: S extends Code ? CompressCodeResult : CompressBinaryResult
 }
 
-export async function compress(opts: CompressOptions<Code>): Promise<CompressResult<MagicString>>
-export async function compress(opts: CompressOptions<FileDataType>): Promise<CompressResult<Uint8Array>>
-export async function compress({ id, source, options, logger }: CompressOptions): Promise<CompressResult> {
-  // base64 images in js/css source code
-  if (isCode(source)) {
-    // skip souce code compression
-    if (options?.base64 === false) {
-      return { id, data: undefined, rate: 1 }
+export async function compress<T extends FileDataType | Code>(params: CompressOptions<T>): Promise<CompressResult<T>>
+export async function compress(params: CompressOptions<any>): Promise<CompressResult<any>> {
+  const { id, options } = params
+  if (isBinary(params.source)) {
+    const result = await compressBinary(id, params.source, options)
+    if (result instanceof CompressError || result === null) {
+      return { id }
     }
-
-    const result = await compressCode(id, source, options)
-    const { code, replaces } = result
-
-    if (logger) {
-      for (const { start, source, best, error } of replaces) {
-        const rid = `${id} (at ${start})`
-        if (error) {
-          logger.fail(rid, error, error.compressor)
-        }
-        else if (best) {
-          logger.success(rid, source, best.data, best.compressor.name)
-        }
-      }
-    }
-
-    const rate = computedRate(source.toString().length, code.toString().length)
-
-    return { id, data: code, rate }
+    return { id, data: result }
   }
 
-  // asset binary data or base64 image string
-  source = toUnit8Array(source)
-  const result = await compressAsset(id, source, options)
-  if (result instanceof CompressError) {
-    logger?.fail(id, result, result.compressor)
+  const result = await compressCode(id, params.source, options)
+  if (result === null) {
+    return { id }
   }
-  else {
-    logger?.success(id, source, result.data, result.compressor.name)
-  }
-
-  const isError = result instanceof CompressError
-  if (isError) {
-    return { id, rate: 1 }
-  }
-
-  return {
-    id,
-    data: result.data,
-    rate: computedRate(source.byteLength, result.data.byteLength),
-  }
+  return { id, data: result }
 }
 
-interface CompressAssetResult {
-  data: Uint8Array
+interface CompressBinaryResult {
+  source: Uint8Array
+  compressed: Uint8Array
   compressor: Compressor
+  isSmallerThanSourceFile: boolean
 }
 
-export async function compressAsset(id: string, source: FileDataType, options?: Options): Promise<CompressAssetResult | CompressError> {
+/**
+ * compress binary data (image file or base64 image string)
+ *
+ * - return `CompressBinaryResult` means compress success
+ * - return `CompressError` means compress failed
+ * - return `null` means no available compressors
+ *
+ * @param id file id or path
+ * @param source file data or base64 image string
+ * @param options unplugin options
+ */
+export async function compressBinary(id: string, source: FileDataType | Base64, options?: Options): Promise<CompressBinaryResult | CompressError | null> {
   source = toUnit8Array(source)
 
   const fileType = await fileTypeFromBuffer(source)
@@ -108,82 +84,109 @@ export async function compressAsset(id: string, source: FileDataType, options?: 
     return error
   }
 
-  if (compressorMap.size === 0) {
-    initCompressors(options)
-  }
-
-  const queue: Promise<CompressAssetResult | CompressError>[] = []
+  const queue: Promise<CompressBinaryResult | CompressError | null>[] = []
 
   compressorMap.forEach((compressor) => {
     if (!canUse(compressor, fileType)) {
       return
     }
 
-    const item = runAwaitable(() => compressor.compress(source, fileType, options))
-      .then((data) => {
-        if (!data) {
-          throw new CompressError('not compressed', id)
-        }
-        return { data: toUnit8Array(data), compressor }
-      })
-      .catch((err) => {
-        const error = CompressError.from(err, id)
-        error.compressor = compressor.name
-        return error
-      })
+    queue.push((async () => {
+      const promise = runAwaitable(() => compressor.compress(source, fileType, options))
+      const result = await promise.catch(error => CompressError.from(error, id))
+      if (CompressError.is(result)) {
+        result.compressor = compressor.name
+        return result
+      }
 
-    queue.push(item)
+      if (!result) {
+        return null
+      }
+
+      return {
+        source,
+        compressed: toUnit8Array(result),
+        compressor,
+        isSmallerThanSourceFile: result.byteLength < source.byteLength,
+      }
+    })())
   })
 
   const results = await Promise.all(queue)
 
-  const { best = null, error } = results.reduce((acc, item) => {
+  const { best = null, error = null } = results.reduce((acc, item) => {
     if (item instanceof CompressError) {
       acc.error = item
-      return acc
     }
-
-    const { data, compressor } = item
-    if (!acc.best || acc.best.data.byteLength > data.byteLength) {
-      acc.best = { data, compressor }
+    else if (item !== null) {
+      acc.best = item
     }
-
     return acc
-  }, {} as { best?: CompressAssetResult, error?: CompressError })
+  }, {} as { best?: CompressBinaryResult, error?: CompressError })
 
-  if (best) {
-    return best
-  }
-
-  return error || new CompressError('no available compressors', id)
+  return best || error
 }
 
 interface CompressCodeResult {
-  code: MagicString
-  replaces: { source: Uint8Array, best?: CompressAssetResult, start: number, error?: CompressError }[]
+  source: Code
+  compressed: Code
+  isSmallerThanSourceFile: boolean
+  replaces: {
+    replaceId: string
+    start: number
+    end: number
+    source: Uint8Array
+    best?: CompressBinaryResult
+    error?: CompressError
+  }[]
 }
 
-export async function compressCode(id: string, code: Code, options?: Options): Promise<CompressCodeResult> {
-  code = code instanceof MagicString ? code : new MagicString(code)
+/**
+ * Compress base64 image strings in js/css code
+ *
+ * - return `null` means no base64 image found
+ * - return `CompressCodeResult` means compress success
+ *
+ * @param id js/css file path
+ * @param code js/css source code
+ * @param options unplugin options
+ */
+export async function compressCode(id: string, code: Code, options?: Options): Promise<CompressCodeResult | null> {
+  const mc = new MagicString(code)
 
-  const matches = code.original.matchAll(/data:image\/[^;]+;base64,[A-Za-z0-9+/]+={0,2}/g)
+  const matches = mc.original.matchAll(/data:image\/[^;]+;base64,[A-Za-z0-9+/]+={0,2}/g)
 
   const queue = matches.map<Promise<CompressCodeResult['replaces'][number]>>(async (match) => {
     const source = toUnit8Array(match[0])
-
-    const result = await compressAsset(id, source, options)
-
-    const start = match.index!
+    const result = await compressBinary(id, source, options)
+    const start = match.index
+    const end = start + source.length
+    const replaceId = `${id}_[${start}:${end}]`
 
     if (result instanceof CompressError) {
-      return { start, error: result, source }
+      return { start, error: result, source, replaceId, end }
     }
 
-    return { start, source, best: result }
+    if (result?.isSmallerThanSourceFile) {
+      mc.overwrite(start, end, await toBase64(result.compressed))
+    }
+
+    return { start, source, best: result || undefined, replaceId, end }
   })
 
   const replaces = await Promise.all(queue)
-  return { code, replaces }
+
+  if (replaces.length === 0) {
+    return null
+  }
+
+  const resultCode = mc.toString()
+  return {
+    source: code,
+    compressed: resultCode,
+    isSmallerThanSourceFile: resultCode.length < code.length,
+    replaces,
+  }
 }
 
 function canUse(compressor: Compressor, fileType: FileTypeResult, options?: Options): boolean {
