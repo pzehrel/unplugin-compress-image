@@ -9,9 +9,8 @@ import { compressMozJpeg } from './mozjpeg'
 import { compressOxiPng } from './oxipng'
 import { compressWebp } from './webp'
 
-export const jsquash = defineCompressor<'jsquash'>((ctx) => {
+export const jsquash = defineCompressor('jsquash', (ctx) => {
   return {
-    name: 'jsquash',
     use: /(jpe?g|png|webp|avif)$/i,
     compress: async (input, fileType, options) => {
       const source = ctx.toArrayBuffer(input)

@@ -3,7 +3,7 @@ import type { Base64, Code, FileDataType, Options } from '../types'
 import type { Compressor, CompressorFn, CompressorFnContext } from './types'
 import { fileTypeFromBuffer } from 'file-type'
 import MagicString from 'magic-string'
-import { builtInCompressors } from '../compressors'
+import { getBuiltInCompressors } from '../compressors'
 import { _contextUtils, CompressError, isBinary, toBase64, toUnit8Array } from '../utils'
 
 export * from './types'
@@ -13,7 +13,7 @@ const compressorMap = new Map<string | CompressorFn, Compressor>()
 export function initCompressors(options?: Options): void {
   const context: CompressorFnContext = { options, ..._contextUtils }
   if (compressorMap.size === 0) {
-    for (const compressor of builtInCompressors) {
+    for (const compressor of getBuiltInCompressors(options)) {
       compressorMap.set(compressor, compressor(context))
     }
   }
