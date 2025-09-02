@@ -1,8 +1,8 @@
 import { defineCompressor } from '../compressor'
 
-export const tinypng = defineCompressor<'tinypng'>((options) => {
+export const tinypng = defineCompressor('tinypng', (options) => {
+  const a = options.options?.tinypng
   return {
-    name: 'tinypng',
     use: /png|jpe?g|webp|avif$/,
     compress: async (file, _, options) => {
       // TODO: 需要支持多个 API Key 的轮询

@@ -29,14 +29,26 @@ export interface Compressor<Name extends string = any> {
   ) => Promise<OutputFileType> | OutputFileType
 }
 
-export type CompressorFnContext = typeof _contextUtils & { options?: Options }
+export type CompressorFnContext<Name extends string = any> = typeof _contextUtils & { options?: Name extends keyof Options ? ExcludeBoolean<Options, Name> : Options }
 
 export interface CompressorFn<Name extends string = any> {
-  (context: CompressorFnContext): Compressor<Name>
+  (context: CompressorFnContext<Name>): Compressor<Name>
+  id: Name
 }
 
-export function defineCompressor<Name extends string = any>(compressor: Compressor<Name> | CompressorFn<Name>): CompressorFn<Name> {
-  return typeof compressor === 'function' ? compressor : () => compressor
+export function defineCompressor<N extends string, C extends Omit<Compressor<N>, 'name'>>(name: N, compressor: C | ((compress: CompressorFnContext<N>) => C)): CompressorFn<N> {
+  if (typeof compressor === 'function') {
+    const result: CompressorFn<N> = (context: CompressorFnContext<N>) => {
+      const c = compressor(context)
+      return { name, ...c }
+    }
+    result.id = name
+    return result
+  }
+
+  const result: CompressorFn<N> = () => ({ name, ...compressor })
+  result.id = name
+  return result
 }
 
 export type ExcludeBoolean<T extends Record<string, any>, KS extends keyof T = keyof T> = {
