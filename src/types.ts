@@ -1,14 +1,14 @@
-import type MagicString from 'magic-string'
+// import type MagicString from 'magic-string'
 import type { Compressor, CompressorFn } from './compressor'
 import type { JsquashOptions, SvgoConfig, TinyPngOptions } from './compressors'
 
 export type Base64 = `data:${string}/${string};base64,${string}` | (string & {})
 
 /** js code or css code */
-export type Code = (string & {}) | MagicString
+export type Code = (string & {})
 
 /** supports file type */
-export type FileDataType = ArrayBuffer | Uint8Array | Base64
+export type FileDataType = ArrayBuffer | Uint8Array
 
 export interface Options {
 

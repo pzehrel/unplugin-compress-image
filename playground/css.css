@@ -1,0 +1,10 @@
+.div {
+  background: url("./2.png");
+}
+.div2 {
+  background: url('./1.png');
+}
+
+.div3 {
+  background: url(./3.png);
+}

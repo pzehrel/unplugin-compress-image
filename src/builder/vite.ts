@@ -1,47 +1,52 @@
 import type { VitePlugin } from 'unplugin'
-import type { Options } from '../types'
+import type { Code, Options } from '../types'
 import process from 'node:process'
 import { CompressLogger } from '../common'
 import { compress, initCompressors } from '../compressor'
 
 export function createVitePlugin(options?: Options): Partial<VitePlugin> {
-  const logger = options?.logger === false ? undefined : new CompressLogger()
-
   let root = process.cwd()
 
   return {
     configResolved(config) {
       root = config.root
       initCompressors(options)
+      CompressLogger.createFromOptions(options)
     },
     async generateBundle(_, bundle) {
+      const logger = CompressLogger.instance
       const queue: Promise<any>[] = []
 
-      for (const file of Object.values(bundle)) {
-        // asset file or chunk file(code)
-        if ((file.type === 'asset' && typeof file.source !== 'string') || (file.type === 'chunk' && typeof file.code === 'string')) {
-          const id = file.fileName
-          const source = file.type === 'asset' ? file.source : file.code
-          const promise = compress({ id, source, options, logger, root })
-          promise.then((result) => {
-            if (result.data && result.rate < 1) {
-              if (file.type === 'chunk') {
-                file.code = result.data.toString()
-              }
-              else if (file.type === 'asset') {
-                file.source = result.data
-              }
+      for (const id in bundle) {
+        const file = bundle[id]
+
+        queue.push((async () => {
+          if (file.type === 'asset' && typeof file.source !== 'string') {
+            const result = await compress({ id, source: file.source, options, root })
+            if (result.data?.isSmallerThanSourceFile) {
+              file.source = result.data?.compressed || file.source
             }
-          })
-          queue.push(promise)
-        }
+            logger?.add(result)
+            return
+          }
+
+          if (file.type === 'chunk' || (file.type === 'asset' && typeof file.source === 'string')) {
+            const source = (file.type === 'asset' ? file.source : file.code) as Code
+            const result = await compress({ id, source, options, root })
+            if (result.data?.isSmallerThanSourceFile) {
+              const code = result.data.compressed
+              file.type === 'chunk' ? (file.code = code) : (file.source = code)
+            }
+            logger?.add(result)
+          }
+        })())
       }
 
       await Promise.all(queue)
     },
 
     closeBundle() {
-      //
+      CompressLogger.instance?.printStats(this.environment.logger.info)
     },
   }
 }
