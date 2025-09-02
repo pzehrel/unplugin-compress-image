@@ -19,10 +19,11 @@ export function createWebpackPlugin(options: Options | undefined, PKG_NAME: stri
             const id = relative(root, absolute)
             const source = asset.source()
             const result = await compress({ id, source, options, root })
-            if (result.data && result.rate < 1) {
-              const buffer = Buffer.from(result.data)
+            if (result.data?.isSmallerThanSourceFile) {
+              const buffer = Buffer.from(result.data.compressed)
               compilation.updateAsset(absolute, new compiler.webpack.sources.RawSource(buffer))
             }
+            CompressLogger.instance?.add(result)
           })
 
           await Promise.all(queue)
@@ -33,7 +34,8 @@ export function createWebpackPlugin(options: Options | undefined, PKG_NAME: stri
     })
 
     compiler.hooks.done.tap(PKG_NAME, () => {
-      // logger.table()
+      const logger = compiler.getInfrastructureLogger(PKG_NAME)
+      CompressLogger.instance?.printStats(logger.info.bind(logger))
     })
   }
 }
