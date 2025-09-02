@@ -113,7 +113,11 @@ export class CompressLogger {
       print('')
 
       const percentText = percent >= 1 ? c.yellow(`${percent}%`) : c.green(`${percent}%`)
-      print(`total savings ${c.green(`${kb(before)}kB`)} -> ${c.green(`${kb(after)}kB`)} ≈ ${c.bold(`${percentText}`)} reduction`)
+      print(`total compress ${c.green(`${kb(before)}kB`)} -> ${c.green(`${kb(after)}kB`)} ≈ ${c.bold(`${percentText}`)} reduction`)
+
+      const skips = this.records.filter(i => i.success && !i.isReplace)
+      const successes = this.records.filter(i => i.success && i.isReplace)
+      print(`success ${c.green(`${successes.length}`)}; skipped ${c.yellow(`${skips.length}`)}; failed ${c.red(`${this.failCount}`)}; total ${c.bold(`${total}`)}`)
     }
   }
 }
