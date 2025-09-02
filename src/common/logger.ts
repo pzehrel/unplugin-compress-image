@@ -61,6 +61,8 @@ export class CompressLogger {
         }
       })
     }
+
+    // asset file success
     else {
       this.success(result.id, result.data.source, result.data.compressed!, result.data.compressor.name, result.data.isSmallerThanSourceFile)
     }
