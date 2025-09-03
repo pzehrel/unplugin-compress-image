@@ -15,6 +15,8 @@ export interface Compressor<Name extends string = any> {
    */
   use?: RegExp | ((fileType: FileTypeResult) => boolean)
 
+  init?: (ctx: CompressorFnContext<Name>) => void | Promise<void>
+
   /**
    * compress image
    * @param source input file data
@@ -29,7 +31,10 @@ export interface Compressor<Name extends string = any> {
   ) => Promise<OutputFileType> | OutputFileType
 }
 
-export type CompressorFnContext<Name extends string = any> = typeof _contextUtils & { options?: Name extends keyof Options ? ExcludeBoolean<Options, Name> : Options }
+export interface CompressorFnContext<Name extends string = any> {
+  options?: Name extends keyof Options ? ExcludeBoolean<Options, Name> : Options
+  utils: typeof _contextUtils
+}
 
 export interface CompressorFn<Name extends string = any> {
   (context: CompressorFnContext<Name>): Compressor<Name>

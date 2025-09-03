@@ -11,7 +11,7 @@ export function createWebpackPlugin(options: Options | undefined, PKG_NAME: stri
       compilation.hooks.processAssets.tapAsync(
         { name: PKG_NAME, stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE },
         async (assets, callback) => {
-          Context.create({
+          await Context.create({
             root: compiler.context,
             dist: compiler.options.output.path || 'dist',
             options,

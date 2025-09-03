@@ -10,8 +10,9 @@ export * from './types'
 
 const compressorMap = new Map<string | CompressorFn, Compressor>()
 
-export function initCompressors(options?: Options): void {
-  const context: CompressorFnContext = { options, ..._contextUtils }
+export async function initCompressors(options?: Options): Promise<void> {
+  const context: CompressorFnContext = { options, utils: _contextUtils }
+
   if (compressorMap.size === 0) {
     for (const compressor of getBuiltInCompressors(options)) {
       compressorMap.set(compressor, compressor(context))
@@ -25,6 +26,8 @@ export function initCompressors(options?: Options): void {
     }
     compressorMap.set(key, typeof custom === 'function' ? custom(context) : custom)
   }
+
+  await Promise.all([...compressorMap.values()].map(c => c.init?.(context)))
 }
 
 interface CompressOptions<Source extends FileDataType | Code> {

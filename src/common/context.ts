@@ -16,14 +16,13 @@ export class Context {
 
   private constructor() {}
 
-  static create(config: ContextConfig): void {
+  static async create(config: ContextConfig): Promise<void> {
     Context.options = config.options
     Context.root = config.root
     Context.dist = config.dist
-    initCompressors(Context.options)
-
     if (config.options?.logger !== false) {
       Context.logger = new CompressLogger()
     }
+    await initCompressors(Context.options)
   }
 }
