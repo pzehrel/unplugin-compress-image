@@ -101,8 +101,7 @@
     "pathe": "^2.0.3",
     "svgo": "^4.0.0",
     "tinify": "^1.8.1",
-    "unplugin": "^2.3.9",
-    "user-agents": "^1.1.646"
+    "unplugin": "^2.3.9"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^5.2.1",
@@ -112,7 +111,6 @@
     "@types/emscripten": "^1.40.1",
     "@types/findup-sync": "^4.0.5",
     "@types/node": "^22.18.0",
-    "@types/user-agents": "^1.0.4",
     "bumpp": "^10.2.3",
     "eslint": "^9.34.0",
     "nodemon": "^3.1.10",
