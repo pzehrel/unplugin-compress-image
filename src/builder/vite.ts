@@ -1,20 +1,19 @@
 import type { VitePlugin } from 'unplugin'
 import type { Code, Options } from '../types'
-import process from 'node:process'
-import { CompressLogger } from '../common'
-import { compress, initCompressors } from '../compressor'
+import { Context } from '../common'
+import { compress } from '../compressor'
 
 export function createVitePlugin(options?: Options): Partial<VitePlugin> {
-  let root = process.cwd()
-
   return {
     configResolved(config) {
-      root = config.root
-      initCompressors(options)
-      CompressLogger.createFromOptions(options)
+      Context.create({
+        root: config.root,
+        dist: config.build.outDir,
+        options,
+      })
     },
     async generateBundle(_, bundle) {
-      const logger = CompressLogger.instance
+      const { logger, root } = Context
       const queue: Promise<any>[] = []
 
       for (const id in bundle) {
@@ -46,7 +45,7 @@ export function createVitePlugin(options?: Options): Partial<VitePlugin> {
     },
 
     closeBundle() {
-      CompressLogger.instance?.printStats(this.environment.logger.info)
+      Context.logger?.printStats(this.environment.logger.info)
     },
   }
 }
