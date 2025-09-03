@@ -1,6 +1,6 @@
 import type { compress } from '../compressor'
-import type { Options } from '../types'
 import c from 'ansi-colors'
+import columnify from 'columnify'
 import { name as PKG_NAME } from '../../package.json'
 import { CompressError } from '../utils'
 
@@ -20,22 +20,6 @@ interface Fail {
 }
 
 export class CompressLogger {
-  private constructor() {}
-  public static get instance(): CompressLogger | null {
-    return this._instance
-  }
-
-  private static _instance: CompressLogger | null = null
-
-  static createFromOptions(options?: Options): void {
-    if (options?.logger === false) {
-      return undefined
-    }
-    if (!this._instance) {
-      this._instance = new CompressLogger()
-    }
-  }
-
   private records: (Success | Fail)[] = []
   private successCount = 0
   private failCount = 0
@@ -90,7 +74,7 @@ export class CompressLogger {
     this.failCount += 1
   }
 
-  printStats(print: (message: string) => void): void {
+  printStats(print?: (message: string) => void): void {
     // eslint-disable-next-line no-console
     print ||= console.info
 
@@ -108,6 +92,25 @@ export class CompressLogger {
     const isSuccess = isCompleted && this.failCount === 0
 
     print(`${c.cyan(`[plugin ${PKG_NAME}]`)} - compress images ${isCompleted ? c.green(isSuccess ? 'succeeded' : 'completed') : c.yellow('failed')}`)
+
+    const logs = columnify(this.records.map((item) => {
+      if (item.success) {
+        return {
+          File: c.green(item.id),
+          Reduction: item.rate > 1 ? c.yellow(`${item.rate}%`) : c.green(`${item.rate}%`),
+          Compressor: item.compressor,
+          Status: item.isReplace ? c.green('replaced') : c.yellow('skipped'),
+        }
+      }
+      return {
+        File: c.green(item.id),
+        Reduction: `${c.red('error')}`,
+        Compressor: c.red(item.error.compressor || 'unknown'),
+        Status: c.red(item.error.message || 'unknown error'),
+      }
+    }))
+
+    print(logs)
 
     if (isCompleted) {
       print('')

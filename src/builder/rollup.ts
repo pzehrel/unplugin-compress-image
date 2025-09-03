@@ -1,20 +1,19 @@
 import type { RollupPlugin } from 'unplugin'
 import type { Code, Options } from '../types'
-import process from 'node:process'
-import { CompressLogger } from '../common'
-import { compress, initCompressors } from '../compressor'
+import { Context } from '../common'
+import { compress } from '../compressor'
 
 export function createRollupPlugin(options?: Options): Partial<RollupPlugin> {
-  let root = ''
-
   return {
     buildStart() {
-      root = this.environment.config.root || process.cwd()
-      initCompressors(options)
-      CompressLogger.createFromOptions(options)
+      Context.create({
+        root: this.environment.config.root,
+        dist: this.environment.config.build.outDir,
+        options,
+      })
     },
     async generateBundle(_, bundle) {
-      const logger = CompressLogger.instance
+      const { logger, root } = Context
       const queue: Promise<any>[] = []
 
       for (const id in bundle) {
@@ -46,7 +45,7 @@ export function createRollupPlugin(options?: Options): Partial<RollupPlugin> {
     },
 
     closeBundle() {
-      CompressLogger.instance?.printStats(this.environment.logger.info)
+      Context.logger?.printStats(this.environment.logger.info)
     },
   }
 }
