@@ -1,25 +1,51 @@
+import process from 'node:process'
+import tinify from 'tinify'
 import { defineCompressor } from '../compressor'
 
-export const tinypng = defineCompressor('tinypng', (options) => {
-  const a = options.options?.tinypng
+export const tinypng = defineCompressor('tinypng', () => {
+  let keys: string[] = []
+  let currentKeyIndex = 0
+
   return {
     use: /png|jpe?g|webp|avif$/,
-    compress: async (file, _, options) => {
-      // TODO: 需要支持多个 API Key 的轮询
-      // const keys = (await parseApiKeys(options?.tinypng?.keys))
-      // const api = options?.tinypng?.api ?? 'https://api.tinify.com/shrink'
 
-      // const response = await fetch(api, {
-      //   method: 'POST',
-      //   headers: new Headers({
-      //     'Authorization': `Basic ${Buffer.from(`api:${keys[0]}`).toString('base64')}`,
-      //     'Content-Type': 'application/octet-stream',
-      //   }),
-      //   body: file,
-      // })
+    init: async (ctx) => {
+      keys = await getKeys(ctx.options?.tinypng?.keys) || []
 
-      // return response.arrayBuffer()
-      return null
+      if (ctx.options?.tinypng?.proxy) {
+        tinify.proxy = ctx.options?.tinypng?.proxy
+      }
+    },
+
+    compress: async (file) => {
+      const task = (): Promise<Uint8Array> => new Promise((resolve, reject) => {
+        const key = keys[currentKeyIndex]
+        if (!key) {
+          return reject(new Error('No TinyPNG API key available'))
+        }
+
+        tinify.fromBuffer(file).toBuffer((err, result) => {
+          if (err) {
+            const nextKeyIndex = (currentKeyIndex + 1)
+
+            // Maybe the remaining number of key is 0
+            if (err instanceof tinify.AccountError && nextKeyIndex <= keys.length) {
+              currentKeyIndex = nextKeyIndex
+              return task()
+            }
+
+            return reject(err)
+          }
+
+          if (!result) {
+            reject(new Error('No result from TinyPNG'))
+            return
+          }
+          resolve(result)
+        })
+      })
+
+      return task()
     },
 
   }
@@ -27,31 +53,39 @@ export const tinypng = defineCompressor('tinypng', (options) => {
 
 export interface TinyPngOptions {
   /**
-   * TinyPNG API Endpoint
-   * @default 'https://api.tinify.com/shrink'
-   */
-  api?: string
-
-  /**
    * TinyPNG API Keys
    *
-   * - Supports environment variable injection; use `TINYPNG_KEYS` to inject keys
+   * - Supports environment variable injection; use `TINYPNG_KEYS` to inject keys. multiple keys can be separated by commas.
    * @default process.env.TINYPNG_KEYS
    */
   keys?: string | string[] | (() => Promise<string[] | string> | string | string[])
+
+  proxy?: string
 }
 
-// async function parseApiKeys(keys?: TinyPngConfig['keys']): Promise<string[]> {
-//   if (typeof keys === 'function') {
-//     keys = await keys()
-//   }
+async function getKeys(keys?: TinyPngOptions['keys'] | null): Promise<string[] | null> {
+  if (typeof keys === 'string') {
+    keys = keys.split(',')
+  }
 
-//   if (typeof keys === 'string') {
-//     return [keys]
-//   }
-//   else if (Array.isArray(keys)) {
-//     return keys
-//   }
+  if (Array.isArray(keys)) {
+    keys = keys.map(i => i.trim()).filter(Boolean)
+  }
 
-//   return []
-// }
+  if (typeof keys === 'function') {
+    keys = await getKeys(await keys())
+  }
+
+  if (!keys?.length) {
+    keys = null
+  }
+
+  if (!keys && process.env.TINYPNG_KEYS) {
+    const keys = process.env.TINYPNG_KEYS.split(',').map(i => i.trim()).filter(Boolean)
+    if (keys.length) {
+      return keys
+    }
+  }
+
+  return null
+}
