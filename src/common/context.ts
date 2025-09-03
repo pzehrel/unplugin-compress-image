@@ -5,13 +5,13 @@ import { CompressLogger } from './logger'
 interface ContextConfig {
   options?: Options
   root: string
-  dist: string
+  outdir: string
 }
 
 export class Context {
   public static options?: Options
   public static root: string
-  public static dist: string
+  public static outdir: string
   public static logger: CompressLogger | null = null
 
   private constructor() {}
@@ -19,7 +19,7 @@ export class Context {
   static async create(config: ContextConfig): Promise<void> {
     Context.options = config.options
     Context.root = config.root
-    Context.dist = config.dist
+    Context.outdir = config.outdir
     if (config.options?.logger !== false) {
       Context.logger = new CompressLogger()
     }

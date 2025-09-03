@@ -155,7 +155,7 @@ export async function compressCode(id: string, code: Code): Promise<CompressCode
     const result = await compressBinary(id, source)
     const start = match.index
     const end = start + source.length
-    const replaceId = `${id}_[${start}:${end}]`
+    const replaceId = `${id} [${start}:${end}]`
 
     if (result instanceof CompressError) {
       return { start, error: result, source, replaceId, end }
