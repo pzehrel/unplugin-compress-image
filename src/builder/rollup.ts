@@ -5,8 +5,8 @@ import { compress } from '../compressor'
 
 export function createRollupPlugin(options?: Options): Partial<RollupPlugin> {
   return {
-    buildStart() {
-      Context.create({
+    async buildStart() {
+      await Context.create({
         root: this.environment.config.root,
         dist: this.environment.config.build.outDir,
         options,
