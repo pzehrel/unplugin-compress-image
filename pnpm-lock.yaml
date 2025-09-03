@@ -47,6 +47,9 @@ importers:
       svgo:
         specifier: ^4.0.0
         version: 4.0.0
+      tinify:
+        specifier: ^1.8.1
+        version: 1.8.1
       unplugin:
         specifier: ^2.3.9
         version: 2.3.9
@@ -1147,6 +1150,10 @@ packages:
     engines: {node: '>=0.4.0'}
     hasBin: true
 
+  agent-base@7.1.4:
+    resolution: {integrity: sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ==}
+    engines: {node: '>= 14'}
+
   ajv-formats@2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
     peerDependencies:
@@ -2162,6 +2169,10 @@ packages:
     resolution: {integrity: sha512-7mz/721AbnJwIVbnaSv1Cz3Am0ZLT/UBwkC92VlxhXv/k/BBQfM2fXElQNC27BVGr0uwUpplYPQM9LnaBMR5NQ==}
     engines: {node: '>=8.0.0'}
 
+  https-proxy-agent@7.0.6:
+    resolution: {integrity: sha512-vK9P5/iUfdl95AI+JVyUuIcVtd4ofvtrOr3HNtM2yxC9bnMbEdp3x01OhQNnjb8IJYi38VlTE3mBXwcfvywuSw==}
+    engines: {node: '>= 14'}
+
   human-id@4.1.1:
     resolution: {integrity: sha512-3gKm/gCSUipeLsRYZbbdA1BD83lBoWUkZ7G9VFrhWPAU76KwYo5KR8V28bpoPm/ygy0x5/GCbpRQdY7VLYCoIg==}
     hasBin: true
@@ -2857,6 +2868,10 @@ packages:
     engines: {node: '>=10.13.0'}
     hasBin: true
 
+  promise-nodeify@3.0.1:
+    resolution: {integrity: sha512-ghsSuzZXJX8iO7WVec2z7GI+Xk/EyiD+JZK7AZKhUqYfpLa/Zs4ylUD+CwwnKlG6G3HnkUPMAi6PO7zeqGKssg==}
+    engines: {node: '>=6', npm: '>=1.3.7'}
+
   pstree.remy@1.1.8:
     resolution: {integrity: sha512-77DZwxQmxKnu3aR542U+X8FypNzbfJ+C5XQDk3uWjWxn6151aIMGthWYRXTqT1E5oJvg+ljaa2OJi+VfvCOQ8w==}
 
@@ -3153,6 +3168,10 @@ packages:
     resolution: {integrity: sha512-+6erLbBm0+LROX2sPXlUYx/ux5PyE9K/a92Wrt6oA+WDAoFTdpHE5tCYCI5PNzq2y8df4rA+QgHLJuR4jNymsg==}
     engines: {node: '>=10'}
     hasBin: true
+
+  tinify@1.8.1:
+    resolution: {integrity: sha512-d/s/609VTJo9QuBqfye0B7vGfTAGOk+k2vfcN5yDQ6xEIkmQ0j9A+EyctSwyTWnznhSWC1v3qYD4/e0yyGzPyQ==}
+    engines: {node: '>= 14.0'}
 
   tinybench@2.9.0:
     resolution: {integrity: sha512-0+DUvqWMValLmha6lr4kD8iAMK1HzV0/aKnCtWb9v9641TnP/MFb7Pc2bxoxQjTXAErryXVgUOfv2YqNllqGeg==}
@@ -4662,6 +4681,8 @@ snapshots:
 
   acorn@8.15.0: {}
 
+  agent-base@7.1.4: {}
+
   ajv-formats@2.1.1(ajv@8.17.1):
     optionalDependencies:
       ajv: 8.17.1
@@ -5738,6 +5759,13 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
+  https-proxy-agent@7.0.6:
+    dependencies:
+      agent-base: 7.1.4
+      debug: 4.4.1(supports-color@5.5.0)
+    transitivePeerDependencies:
+      - supports-color
+
   human-id@4.1.1: {}
 
   human-signals@2.1.0: {}
@@ -6561,6 +6589,8 @@ snapshots:
 
   prettier@2.8.8: {}
 
+  promise-nodeify@3.0.1: {}
+
   pstree.remy@1.1.8: {}
 
   punycode@2.3.1: {}
@@ -6861,6 +6891,13 @@ snapshots:
       acorn: 8.15.0
       commander: 2.20.3
       source-map-support: 0.5.21
+
+  tinify@1.8.1:
+    dependencies:
+      https-proxy-agent: 7.0.6
+      promise-nodeify: 3.0.1
+    transitivePeerDependencies:
+      - supports-color
 
   tinybench@2.9.0: {}
 

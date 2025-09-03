@@ -100,6 +100,7 @@
     "magic-string": "^0.30.18",
     "pathe": "^2.0.3",
     "svgo": "^4.0.0",
+    "tinify": "^1.8.1",
     "unplugin": "^2.3.9",
     "user-agents": "^1.1.646"
   },
