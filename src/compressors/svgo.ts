@@ -1,8 +1,7 @@
 import { optimize } from 'svgo'
 import { defineCompressor } from '../compressor'
 
-export const svgo = defineCompressor({
-  name: 'svgo',
+export const svgo = defineCompressor('svgo', {
   use: /image\/svg\+xml/i,
   compress: async (file, _, options) => {
     const svg = new TextDecoder().decode(file)
