@@ -3,6 +3,7 @@ import c from 'ansi-colors'
 import columnify from 'columnify'
 import { name as PKG_NAME } from '../../package.json'
 import { CompressError } from '../utils'
+import { Context } from './context'
 
 interface Success {
   success: true
@@ -93,17 +94,19 @@ export class CompressLogger {
 
     print(`${c.cyan(`[plugin ${PKG_NAME}]`)} - compress images ${isCompleted ? c.green(isSuccess ? 'succeeded' : 'completed') : c.yellow('failed')}`)
 
+    const { outdir } = Context
     const logs = columnify(this.records.map((item) => {
+      const File = `${c.dim(outdir)}/${c.green(item.id)}`
       if (item.success) {
         return {
-          File: c.green(item.id),
+          File,
           Reduction: item.rate > 1 ? c.yellow(`${item.rate}%`) : c.green(`${item.rate}%`),
           Compressor: item.compressor,
           Status: item.isReplace ? c.green('replaced') : c.yellow('skipped'),
         }
       }
       return {
-        File: c.green(item.id),
+        File,
         Reduction: `${c.red('error')}`,
         Compressor: c.red(item.error.compressor || 'unknown'),
         Status: c.red(item.error.message || 'unknown error'),

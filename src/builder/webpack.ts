@@ -13,7 +13,7 @@ export function createWebpackPlugin(options: Options | undefined, PKG_NAME: stri
         async (assets, callback) => {
           await Context.create({
             root: compiler.context,
-            dist: compiler.options.output.path || 'dist',
+            outdir: compiler.options.output.path || 'dist',
             options,
           })
 

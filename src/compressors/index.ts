@@ -2,8 +2,9 @@ import type { CompressorFn } from '../compressor/types'
 import type { Options } from '../types'
 import { jsquash } from './jsquash'
 import { svgo } from './svgo'
+import { tinypng } from './tinypng'
 
-export const builtInCompressors: CompressorFn[] = [jsquash, svgo]
+export const builtInCompressors: CompressorFn[] = [jsquash, svgo, tinypng]
 
 export function getBuiltInCompressors(options?: Options): CompressorFn[] {
   return builtInCompressors.filter((fn) => {

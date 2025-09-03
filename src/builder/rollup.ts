@@ -8,7 +8,7 @@ export function createRollupPlugin(options?: Options): Partial<RollupPlugin> {
     async buildStart() {
       await Context.create({
         root: this.environment.config.root,
-        dist: this.environment.config.build.outDir,
+        outdir: this.environment.config.build.outDir,
         options,
       })
     },
@@ -29,6 +29,10 @@ export function createRollupPlugin(options?: Options): Partial<RollupPlugin> {
             return
           }
 
+          // not compress base64 assets in code file
+          if (options?.base64 === false) {
+            return
+          }
           if (file.type === 'chunk' || (file.type === 'asset' && typeof file.source === 'string')) {
             const source = (file.type === 'asset' ? file.source : file.code) as Code
             const result = await compress(id, source)
