@@ -53,9 +53,6 @@ importers:
       unplugin:
         specifier: ^2.3.9
         version: 2.3.9
-      user-agents:
-        specifier: ^1.1.646
-        version: 1.1.646
     devDependencies:
       '@antfu/eslint-config':
         specifier: ^5.2.1
@@ -78,9 +75,6 @@ importers:
       '@types/node':
         specifier: ^22.18.0
         version: 22.18.0
-      '@types/user-agents':
-        specifier: ^1.0.4
-        version: 1.0.4
       bumpp:
         specifier: ^10.2.3
         version: 10.2.3
@@ -110,7 +104,7 @@ importers:
         version: 3.2.4(@types/debug@4.1.12)(@types/node@22.18.0)(jiti@2.5.1)(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1)
       webpack:
         specifier: ^5.101.3
-        version: 5.101.3
+        version: 5.101.3(esbuild@0.25.9)
 
   playground:
     devDependencies:
@@ -957,9 +951,6 @@ packages:
 
   '@types/unist@3.0.3':
     resolution: {integrity: sha512-ko/gIFJRv177XgZsZcBwnqJN5x/Gien8qNOn0D5bQU/zAzVf9Zt3BlcUiLqhV9y4ARk0GbT3tnUiPNgnTXzc/Q==}
-
-  '@types/user-agents@1.0.4':
-    resolution: {integrity: sha512-AjeFc4oX5WPPflgKfRWWJfkEk7Wu82fnj1rROPsiqFt6yElpdGFg8Srtm/4PU4rA9UiDUZlruGPgcwTMQlwq4w==}
 
   '@typescript-eslint/eslint-plugin@8.41.0':
     resolution: {integrity: sha512-8fz6oa6wEKZrhXWro/S3n2eRJqlRcIa6SlDh59FXJ5Wp5XRZ8B9ixpJDcjadHq47hMx0u+HW6SNa6LjJQ6NLtw==}
@@ -2427,9 +2418,6 @@ packages:
     resolution: {integrity: sha512-iPZK6eYjbxRu3uB4/WZ3EsEIMJFMqAoopl3R+zuq0UjcAm/MO6KCweDgPfP3elTztoKP3KtnVHxTn2NHBSDVUw==}
     engines: {node: '>=10'}
 
-  lodash.clonedeep@4.5.0:
-    resolution: {integrity: sha512-H5ZhCF25riFd9uB5UCkVKo61m3S/xZk1x4wA6yp/L3RFP6Z/eHH1ymQcGLo7J3GMPfm0V/7m1tryHuGVxpqEBQ==}
-
   lodash.debounce@4.0.8:
     resolution: {integrity: sha512-FT1yDzDYEoYWhnSGnpE/4Kj1fLZkDFyqRb7fNt6FdYOSxlUWAtp42Eh6Wb0rGIv/m9Bgo7x4GhQbm5Ys4SG5ow==}
 
@@ -3363,9 +3351,6 @@ packages:
 
   uri-js@4.4.1:
     resolution: {integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==}
-
-  user-agents@1.1.646:
-    resolution: {integrity: sha512-DBKtBZSv7pwazNOLMNXH8EM5BQYXPbYuNo7Mmq5sU3PioMRMVPlmoQ3JvuIm6e0krPPWWyiH7w7c/iml2XH7qA==}
 
   util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
@@ -4404,8 +4389,6 @@ snapshots:
   '@types/ua-parser-js@0.7.39': {}
 
   '@types/unist@3.0.3': {}
-
-  '@types/user-agents@1.0.4': {}
 
   '@typescript-eslint/eslint-plugin@8.41.0(@typescript-eslint/parser@8.41.0(eslint@9.34.0(jiti@2.5.1))(typescript@5.9.2))(eslint@9.34.0(jiti@2.5.1))(typescript@5.9.2)':
     dependencies:
@@ -6009,8 +5992,6 @@ snapshots:
     dependencies:
       p-locate: 5.0.0
 
-  lodash.clonedeep@4.5.0: {}
-
   lodash.debounce@4.0.8: {}
 
   lodash.merge@4.6.2: {}
@@ -6876,14 +6857,16 @@ snapshots:
 
   term-size@2.2.1: {}
 
-  terser-webpack-plugin@5.3.14(webpack@5.101.3):
+  terser-webpack-plugin@5.3.14(esbuild@0.25.9)(webpack@5.101.3(esbuild@0.25.9)):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.30
       jest-worker: 27.5.1
       schema-utils: 4.3.2
       serialize-javascript: 6.0.2
       terser: 5.43.1
-      webpack: 5.101.3
+      webpack: 5.101.3(esbuild@0.25.9)
+    optionalDependencies:
+      esbuild: 0.25.9
 
   terser@5.43.1:
     dependencies:
@@ -7096,10 +7079,6 @@ snapshots:
     dependencies:
       punycode: 2.3.1
 
-  user-agents@1.1.646:
-    dependencies:
-      lodash.clonedeep: 4.5.0
-
   util-deprecate@1.0.2: {}
 
   vary@1.1.2: {}
@@ -7237,7 +7216,7 @@ snapshots:
 
   webpack-virtual-modules@0.6.2: {}
 
-  webpack@5.101.3:
+  webpack@5.101.3(esbuild@0.25.9):
     dependencies:
       '@types/eslint-scope': 3.7.7
       '@types/estree': 1.0.8
@@ -7261,7 +7240,7 @@ snapshots:
       neo-async: 2.6.2
       schema-utils: 4.3.2
       tapable: 2.2.3
-      terser-webpack-plugin: 5.3.14(webpack@5.101.3)
+      terser-webpack-plugin: 5.3.14(esbuild@0.25.9)(webpack@5.101.3(esbuild@0.25.9))
       watchpack: 2.4.4
       webpack-sources: 3.3.3
     transitivePeerDependencies:
