@@ -7,7 +7,12 @@ export const tinypng = defineCompressor('tinypng', () => {
   let currentKeyIndex = 0
 
   return {
-    use: /png|jpe?g|webp|avif$/,
+    use: (fileType) => {
+      if (keys.length === 0) {
+        return false
+      }
+      return /png|jpe?g|webp|avif$/.test(fileType.ext)
+    },
 
     init: async (ctx) => {
       keys = await getKeys(ctx.options?.tinypng?.keys) || []
