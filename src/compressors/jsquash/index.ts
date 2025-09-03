@@ -13,7 +13,7 @@ export const jsquash = defineCompressor('jsquash', (ctx) => {
   return {
     use: /(jpe?g|png|webp|avif)$/i,
     compress: async (input, fileType, options) => {
-      const source = ctx.toArrayBuffer(input)
+      const source = ctx.utils.toArrayBuffer(input)
 
       switch (fileType.mime) {
         case 'image/jpeg':
