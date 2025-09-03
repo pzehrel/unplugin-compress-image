@@ -3,6 +3,7 @@ import type { Base64, Code, FileDataType, Options } from '../types'
 import type { Compressor, CompressorFn, CompressorFnContext } from './types'
 import { fileTypeFromBuffer } from 'file-type'
 import MagicString from 'magic-string'
+import { Context } from '../common'
 import { getBuiltInCompressors } from '../compressors'
 import { _contextUtils, CompressError, isBinary, toBase64, toUnit8Array } from '../utils'
 
@@ -30,30 +31,22 @@ export async function initCompressors(options?: Options): Promise<void> {
   await Promise.all([...compressorMap.values()].map(c => c.init?.(context)))
 }
 
-interface CompressOptions<Source extends FileDataType | Code> {
-  id: string
-  source: Source
-  options?: Options
-  root: string
-}
-
 interface CompressResult<S extends FileDataType | Code> {
   id: string
   data?: S extends Code ? CompressCodeResult : CompressBinaryResult
 }
 
-export async function compress<T extends FileDataType | Code>(params: CompressOptions<T>): Promise<CompressResult<T>>
-export async function compress(params: CompressOptions<any>): Promise<CompressResult<any>> {
-  const { id, options } = params
-  if (isBinary(params.source)) {
-    const result = await compressBinary(id, params.source, options)
+export async function compress<T extends FileDataType | Code>(id: string, source: T): Promise<CompressResult<T>>
+export async function compress(id: string, source: FileDataType | Code): Promise<CompressResult<any>> {
+  if (isBinary(source)) {
+    const result = await compressBinary(id, source)
     if (result instanceof CompressError || result === null) {
       return { id }
     }
     return { id, data: result }
   }
 
-  const result = await compressCode(id, params.source, options)
+  const result = await compressCode(id, source)
   if (result === null) {
     return { id }
   }
@@ -76,9 +69,8 @@ interface CompressBinaryResult {
  *
  * @param id file id or path
  * @param source file data or base64 image string
- * @param options unplugin options
  */
-export async function compressBinary(id: string, source: FileDataType | Base64, options?: Options): Promise<CompressBinaryResult | CompressError | null> {
+export async function compressBinary(id: string, source: FileDataType | Base64): Promise<CompressBinaryResult | CompressError | null> {
   source = toUnit8Array(source)
 
   const fileType = await fileTypeFromBuffer(source)
@@ -95,7 +87,7 @@ export async function compressBinary(id: string, source: FileDataType | Base64, 
     }
 
     queue.push((async () => {
-      const promise = runAwaitable(() => compressor.compress(source, fileType, options))
+      const promise = runAwaitable(() => compressor.compress(source, fileType, Context.options))
       const result = await promise.catch(error => CompressError.from(error, id))
       if (CompressError.is(result)) {
         result.compressor = compressor.name
@@ -152,16 +144,15 @@ interface CompressCodeResult {
  *
  * @param id js/css file path
  * @param code js/css source code
- * @param options unplugin options
  */
-export async function compressCode(id: string, code: Code, options?: Options): Promise<CompressCodeResult | null> {
+export async function compressCode(id: string, code: Code): Promise<CompressCodeResult | null> {
   const mc = new MagicString(code)
 
   const matches = mc.original.matchAll(/data:image\/[^;]+;base64,[A-Za-z0-9+/]+={0,2}/g)
 
   const queue = matches.map<Promise<CompressCodeResult['replaces'][number]>>(async (match) => {
     const source = toUnit8Array(match[0])
-    const result = await compressBinary(id, source, options)
+    const result = await compressBinary(id, source)
     const start = match.index
     const end = start + source.length
     const replaceId = `${id}_[${start}:${end}]`

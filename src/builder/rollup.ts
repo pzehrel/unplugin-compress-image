@@ -13,7 +13,7 @@ export function createRollupPlugin(options?: Options): Partial<RollupPlugin> {
       })
     },
     async generateBundle(_, bundle) {
-      const { logger, root } = Context
+      const { logger } = Context
       const queue: Promise<any>[] = []
 
       for (const id in bundle) {
@@ -21,7 +21,7 @@ export function createRollupPlugin(options?: Options): Partial<RollupPlugin> {
 
         queue.push((async () => {
           if (file.type === 'asset' && typeof file.source !== 'string') {
-            const result = await compress({ id, source: file.source, options, root })
+            const result = await compress(id, file.source)
             if (result.data?.isSmallerThanSourceFile) {
               file.source = result.data?.compressed || file.source
             }
@@ -31,7 +31,7 @@ export function createRollupPlugin(options?: Options): Partial<RollupPlugin> {
 
           if (file.type === 'chunk' || (file.type === 'asset' && typeof file.source === 'string')) {
             const source = (file.type === 'asset' ? file.source : file.code) as Code
-            const result = await compress({ id, source, options, root })
+            const result = await compress(id, source)
             if (result.data?.isSmallerThanSourceFile) {
               const code = result.data.compressed
               file.type === 'chunk' ? (file.code = code) : (file.source = code)
