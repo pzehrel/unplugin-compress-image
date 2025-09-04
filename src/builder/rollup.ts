@@ -21,9 +21,11 @@ export function createRollupPlugin(options?: Options): Partial<RollupPlugin> {
 
         queue.push((async () => {
           if (file.type === 'asset' && typeof file.source !== 'string') {
-            const result = await compress(id, file.source)
+            const source = file.source
+
+            const result = await compress(id, source)
             if (result.data?.isSmallerThanSourceFile) {
-              file.source = result.data?.compressed || file.source
+              file.source = result.data?.compressed
             }
             logger?.add(result)
             return
@@ -35,6 +37,7 @@ export function createRollupPlugin(options?: Options): Partial<RollupPlugin> {
           }
           if (file.type === 'chunk' || (file.type === 'asset' && typeof file.source === 'string')) {
             const source = (file.type === 'asset' ? file.source : file.code) as Code
+
             const result = await compress(id, source)
             if (result.data?.isSmallerThanSourceFile) {
               const code = result.data.compressed
