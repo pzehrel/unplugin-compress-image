@@ -103,7 +103,7 @@ export class CompressLogger {
       if (item.success) {
         return {
           file,
-          reduction: item.rate > 100 ? c.yellow(`↑${100 - item.rate}%`) : c.green(`↓${item.rate}%`),
+          reduction: item.rate > 100 ? c.yellow(`↑${item.rate - 100}%`) : c.green(`↓${item.rate}%`),
           compressor: item.compressor,
           size: item.isReplace ? c.dim(`${item.before}kB -> ${item.after}kB`) : c.bold(c.yellow('skipped')),
         }
