@@ -2,6 +2,7 @@ import type { RollupPlugin } from 'unplugin'
 import type { Code, Options } from '../types'
 import { Context } from '../common'
 import { compress } from '../compressor'
+import { hasBase64 } from '../utils'
 
 export function createRollupPlugin(options?: Options): Partial<RollupPlugin> {
   return {
@@ -37,6 +38,9 @@ export function createRollupPlugin(options?: Options): Partial<RollupPlugin> {
           }
           if (file.type === 'chunk' || (file.type === 'asset' && typeof file.source === 'string')) {
             const source = (file.type === 'asset' ? file.source : file.code) as Code
+            if (!hasBase64(source)) {
+              return
+            }
 
             const result = await compress(id, source)
             if (result.data?.isSmallerThanSourceFile) {
