@@ -59,8 +59,8 @@ export class CompressLogger {
     this.records.push({
       success: true,
       id,
-      before: source.byteLength,
-      after: output.byteLength,
+      before: kb(source.byteLength),
+      after: kb(output.byteLength),
       rate: computedRate(source.byteLength, output.byteLength),
       compressor,
       isReplace,
@@ -81,51 +81,61 @@ export class CompressLogger {
     // eslint-disable-next-line no-console
     print ||= console.info
 
-    const total = this.successCount + this.failCount
-    const { before, after } = this.records.reduce((acc, item) => {
-      if (item.success) {
-        acc.before += item.before
-        acc.after += item.after
-      }
-      return acc
-    }, { before: 0, after: 0 })
-    const percent = fixed((before - after) / before * 100)
-
-    const isCompleted = total > 0 && this.successCount > 0
+    const isCompleted = this.records.length > 0 && this.successCount > 0
     const isSuccess = isCompleted && this.failCount === 0
 
     print(`${c.cyan(`[plugin ${PKG_NAME}]`)} - compress images ${isCompleted ? c.green(isSuccess ? 'succeeded' : 'completed') : c.yellow('failed')}`)
 
     const { outdir } = Context
     const logs = columnify(this.records.map((item) => {
-      const File = `${c.dim(outdir)}/${c.green(item.id)}`
+      const file = `${c.dim(outdir)}/${c.green(item.id)}`
       if (item.success) {
         return {
-          File,
-          Reduction: item.rate > 1 ? c.yellow(`${item.rate}%`) : c.green(`${item.rate}%`),
-          Compressor: item.compressor,
-          Status: item.isReplace ? c.green('replaced') : c.yellow('skipped'),
+          file,
+          reduction: item.rate > 100 ? c.yellow(`↑${100 - item.rate}%`) : c.green(`↓${item.rate}%`),
+          compressor: item.compressor,
+          size: item.isReplace ? c.dim(`${item.before}kB -> ${item.after}kB`) : c.bold(c.yellow('skipped')),
         }
       }
       return {
-        File,
-        Reduction: `${c.red('error')}`,
-        Compressor: c.red(item.error.compressor || 'unknown'),
-        Status: c.red(item.error.message || 'unknown error'),
+        file,
+        reduction: `${c.red('error')}`,
+        compressor: c.red(item.error.compressor || 'unknown'),
+        size: c.red(item.error.message || 'unknown error'),
       }
-    }))
+    }), { columnSplitter: '  ' })
 
     print(logs)
 
     if (isCompleted) {
       print('')
 
-      const percentText = percent >= 1 ? c.yellow(`${percent}%`) : c.green(`${percent}%`)
-      print(`total compress ${c.green(`${kb(before)}kB`)} -> ${c.green(`${kb(after)}kB`)} ≈ ${c.bold(`${percentText}`)} reduction`)
+      const { successes, skips, fails, before, after } = this.records.reduce((acc, item) => {
+        if (item.success && item.isReplace) {
+          acc.before += item.before
+          acc.after += item.after
+          acc.successes += 1
+        }
+        else if (item.success && !item.isReplace) {
+          acc.skips += 1
+        }
+        else {
+          acc.fails += 1
+        }
+        return acc
+      }, { skips: 0, successes: 0, fails: 0, after: 0, before: 0 })
+      const percent = fixed((before - after) / before * 100)
 
-      const skips = this.records.filter(i => i.success && !i.isReplace)
-      const successes = this.records.filter(i => i.success && i.isReplace)
-      print(`success ${c.green(`${successes.length}`)}; skipped ${c.yellow(`${skips.length}`)}; failed ${c.red(`${this.failCount}`)}; total ${c.bold(`${total}`)}`)
+      print(`${c.green(`${before}kB`)} -> ${c.green(`${after}kB`)} ≈ ${c.green(c.bold(`↓${percent}%`))} reduction`)
+
+      const total = [
+        `total ${c.blue(`${this.records.length}`)}`,
+        `successed ${c.green(`${successes}`)}`,
+        `skipped ${c.yellow(`${skips}`)}`,
+        `failed ${c.red(`${fails}`)}`,
+      ]
+
+      print(total.join(', '))
     }
   }
 }
