@@ -165,23 +165,26 @@ export async function compressCode(id: string, code: Code): Promise<CompressCode
 
   const matches = mc.original.matchAll(/data:image\/[^;]+;base64,[A-Za-z0-9+/]+={0,2}/g)
 
-  const queue = matches.map<Promise<CompressCodeResult['replaces'][number]>>(async (match) => {
-    const source = toUnit8Array(match[0])
-    const result = await compressBinary(id, source)
-    const start = match.index
-    const end = start + source.length
-    const replaceId = `${id} [${start}:${end}]`
+  const queue: Promise<CompressCodeResult['replaces'][number]>[] = []
+  for (const match of matches) {
+    queue.push((async () => {
+      const source = toUnit8Array(match[0])
+      const result = await compressBinary(id, source)
+      const start = match.index
+      const end = start + source.length
+      const replaceId = `${id} [${start}:${end}]`
 
-    if (result instanceof CompressError) {
-      return { start, error: result, source, replaceId, end }
-    }
+      if (result instanceof CompressError) {
+        return { start, error: result, source, replaceId, end }
+      }
 
-    if (result?.isSmallerThanSourceFile) {
-      mc.overwrite(start, end, await toBase64(result.compressed))
-    }
+      if (result?.isSmallerThanSourceFile) {
+        mc.overwrite(start, end, await toBase64(result.compressed))
+      }
 
-    return { start, source, best: result || undefined, replaceId, end }
-  })
+      return { start, source, best: result || undefined, replaceId, end }
+    })())
+  }
 
   const replaces = await Promise.all(queue)
 
