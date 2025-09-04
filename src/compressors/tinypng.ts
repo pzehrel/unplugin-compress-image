@@ -33,7 +33,7 @@ export const tinypng = defineCompressor('tinypng', () => {
           if (err) {
             const nextKeyIndex = (currentKeyIndex + 1)
 
-            // Maybe the remaining number of key is 0
+            // Maybe the remaining number of keys is 0
             if (err instanceof tinify.AccountError && nextKeyIndex <= keys.length) {
               currentKeyIndex = nextKeyIndex
               return task()
@@ -60,7 +60,7 @@ export interface TinyPngOptions {
   /**
    * TinyPNG API Keys
    *
-   * - Supports environment variable injection; use `TINYPNG_KEYS` to inject keys. multiple keys can be separated by commas.
+   * - Supports environment variable injection; use `TINYPNG_KEYS` to inject keys. Multiple keys can be separated by commas.
    * @default process.env.TINYPNG_KEYS
    */
   keys?: string | string[] | (() => Promise<string[] | string> | string | string[])

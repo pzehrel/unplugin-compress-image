@@ -35,7 +35,7 @@ export class CompressLogger {
       return
     }
 
-    // compress js/css code
+    // Compress JS/CSS code
     if ('replaces' in result.data) {
       result.data.replaces.forEach(({ replaceId, best, error }) => {
         if (best) {
@@ -48,7 +48,7 @@ export class CompressLogger {
       })
     }
 
-    // asset file success
+    // Asset file success
     else {
       const compressor = typeof result.data.compressor === 'string' ? result.data.compressor : result.data.compressor.name
       this.success(result.id, result.data.source, result.data.compressed!, compressor, result.data.isSmallerThanSourceFile)
