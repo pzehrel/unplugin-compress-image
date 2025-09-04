@@ -1,5 +1,4 @@
-import type { Buffer } from 'node:buffer'
-import type { FileDataType } from '../types'
+import type { Base64, FileDataType } from '../types'
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'pathe'
@@ -7,75 +6,33 @@ import { toUnit8Array } from '../utils'
 
 export class CompressCache {
   public readonly dir: string
-
   constructor(root: string, dir?: string) {
     this.dir = join(root, dir || 'node_modules/.compress-image-cache')
     mkdirSync(this.dir, { recursive: true })
   }
 
-  /**
-   * Save compressed file to cache
-   * @param source source file md5 or buffer
-   * @param compressed compressed file buffer
-   */
-  save(source: string | FileDataType, compressed: FileDataType): void {
-    compressed = toUnit8Array(compressed)
-    if (!this.same(source, compressed)) {
-      const cacheFile = this.getFilePath(source)
-      writeFileSync(cacheFile, compressed)
+  get(key: FileDataType | Base64): Uint8Array | undefined {
+    const filename = toMd5(key)
+    const filePath = join(this.dir, filename)
+    if (existsSync(filePath)) {
+      return readFileSync(filePath)
     }
   }
 
-  /**
-   * Get compressed file from cache
-   * @param source source file md5 or buffer
-   */
-  get(source: string | FileDataType): Buffer | undefined {
-    const filename = this.md5(source)
-    if (!existsSync(join(this.dir, filename))) {
-      return undefined
-    }
-    const filePath = this.getFilePath(source)
-    const cacheFile = readFileSync(filePath)
-    return cacheFile ? readFileSync(filePath) : undefined
+  set(key: FileDataType | Base64, asset: Uint8Array): void {
+    const filename = toMd5(key)
+    const filePath = join(this.dir, filename)
+    writeFileSync(filePath, asset)
   }
 
-  /**
-   * Check if the compressed file is the same as the cached one
-   * @param source source file md5 or buffer
-   * @param compressed compressed file buffer
-   */
-  same(source: string | FileDataType, compressed: FileDataType): boolean {
-    compressed = toUnit8Array(compressed)
-    return this.get(source)?.equals(compressed) ?? false
+  has(key: FileDataType | Base64): boolean {
+    const filename = toMd5(key)
+    const filePath = join(this.dir, filename)
+    return existsSync(filePath)
   }
+}
 
-  /**
-   * Check if the cache has the compressed file
-   * @param source source file md5 or buffer
-   */
-  has(source: string | FileDataType): boolean {
-    const filename = this.md5(source)
-    return existsSync(join(this.dir, filename))
-  }
-
-  /**
-   * Get the size of the cached compressed file
-   * @param source source file md5 or buffer
-   */
-  size(source: string | Buffer): number {
-    return this.get(source)?.byteLength ?? 0
-  }
-
-  private md5(file: string | FileDataType): string {
-    if (typeof file === 'string') {
-      return file
-    }
-    file = toUnit8Array(file)
-    return createHash('md5').update(file).digest('hex')
-  }
-
-  private getFilePath(file: string | FileDataType): string {
-    return join(this.dir, this.md5(file))
-  }
+function toMd5(value: FileDataType | Base64): string {
+  value = toUnit8Array(value)
+  return createHash('md5').update(value).digest('hex')
 }
