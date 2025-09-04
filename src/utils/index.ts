@@ -19,7 +19,7 @@ export function isBase64(data: unknown): data is Base64 {
 }
 
 export function hasBase64(data: string): boolean {
-  return /^data:\w+\/[a-zA-Z+\-.]+;base64,.*/.test(data)
+  return /data:\w+\/[a-zA-Z+\-.]+;base64,.*/.test(data)
 }
 
 export function getBase64FileType(data: Base64): FileTypeResult | null {
