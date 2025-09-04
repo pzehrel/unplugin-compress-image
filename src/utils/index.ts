@@ -15,11 +15,11 @@ export function isCode(data: unknown): data is Code {
 }
 
 export function isBase64(data: unknown): data is Base64 {
-  return typeof data === 'string' && /^data:\w+\/[a-zA-Z+\-.]+;base64,.*/.test(data)
+  return typeof data === 'string' && /^data:image\/[^;]+;base64,[A-Za-z0-9+/]+={0,2}/.test(data)
 }
 
 export function hasBase64(data: string): boolean {
-  return /data:\w+\/[a-zA-Z+\-.]+;base64,.*/.test(data)
+  return /data:image\/[^;]+;base64,[A-Za-z0-9+/]+={0,2}/.test(data)
 }
 
 export function getBase64FileType(data: Base64): FileTypeResult | null {
