@@ -15,7 +15,7 @@ export interface Compressor<Name extends string = any> {
    */
   use?: RegExp | ((fileType: FileTypeResult) => boolean)
 
-  init?: (ctx: CompressorFnContext<Name>) => void | Promise<void>
+  init?: (ctx: CompressorContext<Name>) => void | Promise<void>
 
   /**
    * compress image
@@ -31,19 +31,19 @@ export interface Compressor<Name extends string = any> {
   ) => Promise<OutputFileType> | OutputFileType
 }
 
-export interface CompressorFnContext<Name extends string = any> {
+export interface CompressorContext<Name extends string = any> {
   options?: Name extends keyof Options ? ExcludeBoolean<Options, Name> : Options
   utils: typeof _contextUtils
 }
 
 export interface CompressorFn<Name extends string = any> {
-  (context: CompressorFnContext<Name>): Compressor<Name>
+  (context: CompressorContext<Name>): Compressor<Name>
   id: Name
 }
 
-export function defineCompressor<N extends string, C extends Omit<Compressor<N>, 'name'>>(name: N, compressor: C | ((compress: CompressorFnContext<N>) => C)): CompressorFn<N> {
+export function defineCompressor<N extends string, C extends Omit<Compressor<N>, 'name'>>(name: N, compressor: C | ((compress: CompressorContext<N>) => C)): CompressorFn<N> {
   if (typeof compressor === 'function') {
-    const result: CompressorFn<N> = (context: CompressorFnContext<N>) => {
+    const result: CompressorFn<N> = (context: CompressorContext<N>) => {
       const c = compressor(context)
       return { name, ...c }
     }
@@ -56,7 +56,7 @@ export function defineCompressor<N extends string, C extends Omit<Compressor<N>,
   return result
 }
 
-export type ExcludeBoolean<T extends Record<string, any>, KS extends keyof T = keyof T> = {
+type ExcludeBoolean<T extends Record<string, any>, KS extends keyof T = keyof T> = {
   [K in KS]: Exclude<T[K], boolean>
 } & {
   [EK in Exclude<keyof T, KS>]: T[EK]

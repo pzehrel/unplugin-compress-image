@@ -1,6 +1,6 @@
 import type { FileTypeResult } from 'file-type'
 import type { Base64, Code, FileDataType, Options } from '../types'
-import type { Compressor, CompressorFn, CompressorFnContext } from './types'
+import type { Compressor, CompressorContext, CompressorFn } from './types'
 import { fileTypeFromBuffer } from 'file-type'
 import MagicString from 'magic-string'
 import { Context } from '../common'
@@ -12,7 +12,7 @@ export * from './types'
 const compressorMap = new Map<string | CompressorFn, Compressor>()
 
 export async function initCompressors(options?: Options): Promise<void> {
-  const context: CompressorFnContext = { options, utils: _contextUtils }
+  const context: CompressorContext = { options, utils: _contextUtils }
 
   if (compressorMap.size === 0) {
     for (const compressor of getBuiltInCompressors(options)) {

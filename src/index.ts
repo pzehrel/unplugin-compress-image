@@ -18,6 +18,3 @@ export const unpluginCompressImageFactory: UnpluginFactory<Options | undefined> 
 export const unpluginCompressImage = /* #__PURE__ */ createUnplugin(unpluginCompressImageFactory)
 
 export default unpluginCompressImage
-
-export { defineCompressor } from './compressor'
-export type { Compressor } from './compressor'
