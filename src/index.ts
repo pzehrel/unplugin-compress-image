@@ -8,6 +8,8 @@ import { createWebpackPlugin } from './builder/webpack'
 export const unpluginCompressImageFactory: UnpluginFactory<Options | undefined> = (options) => {
   return {
     name: PKG_NAME,
+    enforce: 'post',
+    apply: 'build',
     rollup: createRollupPlugin(options),
     vite: createRollupPlugin(options),
     rolldown: createRollupPlugin(options) as Partial<RolldownPlugin>,
