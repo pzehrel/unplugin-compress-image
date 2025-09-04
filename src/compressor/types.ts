@@ -4,6 +4,15 @@ import type { _contextUtils } from '../utils'
 
 type OutputFileType = Uint8Array | ArrayBuffer | null
 
+type ExcludeBoolean<T extends Record<string, any>, KS extends keyof T = keyof T> = {
+  [K in KS]: Exclude<T[K], boolean>
+} & {
+  [EK in Exclude<keyof T, KS>]: T[EK]
+}
+
+/**
+ * image compressor interface
+ */
 export interface Compressor<Name extends string = any> {
   /** compressor name */
   name: Name
@@ -15,6 +24,11 @@ export interface Compressor<Name extends string = any> {
    */
   use?: RegExp | ((fileType: FileTypeResult) => boolean)
 
+  /**
+   * This method is called after the compressor is created, and is only called once.
+   * @param ctx
+   * @returns
+   */
   init?: (ctx: CompressorContext<Name>) => void | Promise<void>
 
   /**
@@ -41,7 +55,14 @@ export interface CompressorFn<Name extends string = any> {
   id: Name
 }
 
-export function defineCompressor<N extends string, C extends Omit<Compressor<N>, 'name'>>(name: N, compressor: C | ((compress: CompressorContext<N>) => C)): CompressorFn<N> {
+type NamelessCompressor = Omit<Compressor<any>, 'name'>
+
+/**
+ * define a compressor
+ * @param name compressor name
+ * @param compressor compressor object or factory function
+ */
+export function defineCompressor<N extends string>(name: N, compressor: NamelessCompressor | ((compress: CompressorContext<N>) => NamelessCompressor)): CompressorFn<N> {
   if (typeof compressor === 'function') {
     const result: CompressorFn<N> = (context: CompressorContext<N>) => {
       const c = compressor(context)
@@ -54,10 +75,4 @@ export function defineCompressor<N extends string, C extends Omit<Compressor<N>,
   const result: CompressorFn<N> = () => ({ name, ...compressor })
   result.id = name
   return result
-}
-
-type ExcludeBoolean<T extends Record<string, any>, KS extends keyof T = keyof T> = {
-  [K in KS]: Exclude<T[K], boolean>
-} & {
-  [EK in Exclude<keyof T, KS>]: T[EK]
 }
