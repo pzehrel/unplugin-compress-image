@@ -61,10 +61,10 @@ interface CompressBinaryResult {
 }
 
 /**
- * compress binary data (image file or base64 image string)
+ * Compress binary data (image file or base64 image string)
  *
- * - return `CompressBinaryResult` means compress success
- * - return `CompressError` means compress failed
+ * - return `CompressBinaryResult` means compression success
+ * - return `CompressError` means compression failed
  * - return `null` means no available compressors
  *
  * @param id file id or path
@@ -137,13 +137,13 @@ interface CompressCodeResult {
 }
 
 /**
- * Compress base64 image strings in js/css code
+ * Compress base64 image strings in JS/CSS code
  *
- * - return `null` means no base64 image found
- * - return `CompressCodeResult` means compress success
+ * - return `null` means no base64 images found
+ * - return `CompressCodeResult` means compression success
  *
- * @param id js/css file path
- * @param code js/css source code
+ * @param id JS/CSS file path
+ * @param code JS/CSS source code
  */
 export async function compressCode(id: string, code: Code): Promise<CompressCodeResult | null> {
   const mc = new MagicString(code)

@@ -31,7 +31,7 @@ export function createRollupPlugin(options?: Options): Partial<RollupPlugin> {
             return
           }
 
-          // not compress base64 assets in code file
+          // Do not compress base64 assets in code files
           if (options?.base64 === false) {
             return
           }

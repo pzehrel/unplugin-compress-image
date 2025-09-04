@@ -4,10 +4,10 @@ import type { JsquashOptions, SvgoConfig, TinyPngOptions } from './compressors'
 
 export type Base64 = `data:${string}/${string};base64,${string}` | (string & {})
 
-/** js code or css code */
+/** JS code or CSS code */
 export type Code = (string & {})
 
-/** supports file type */
+/** Supported file types */
 export type FileDataType = ArrayBuffer | Uint8Array
 
 export interface Options {
@@ -59,15 +59,15 @@ export interface Options {
   }
 
   /**
-   * show logger
+   * Show logger
    * @default true
    */
   logger?: boolean
 
   /**
-   * Compress base64-formatted images in js/css files
+   * Compress base64-formatted images in JS/CSS files
    *
-   * only rollup similar builder supports this feature currently
+   * Only Rollup-like builders support this feature currently
    *
    * @default true
    */
