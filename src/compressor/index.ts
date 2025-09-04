@@ -56,7 +56,7 @@ export async function compress(id: string, source: FileDataType | Code): Promise
 interface CompressBinaryResult {
   source: Uint8Array
   compressed: Uint8Array
-  compressor: Compressor
+  compressor: Compressor | string
   isSmallerThanSourceFile: boolean
 }
 

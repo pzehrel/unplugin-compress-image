@@ -39,7 +39,8 @@ export class CompressLogger {
     if ('replaces' in result.data) {
       result.data.replaces.forEach(({ replaceId, best, error }) => {
         if (best) {
-          this.success(replaceId, best.source, best.compressed, best.compressor.name, best.isSmallerThanSourceFile)
+          const compressor = typeof best.compressor === 'string' ? best.compressor : best.compressor.name
+          this.success(replaceId, best.source, best.compressed, compressor, best.isSmallerThanSourceFile)
         }
         else {
           this.fail(replaceId, error || new Error('no compression data'), error?.compressor)
@@ -49,7 +50,8 @@ export class CompressLogger {
 
     // asset file success
     else {
-      this.success(result.id, result.data.source, result.data.compressed!, result.data.compressor.name, result.data.isSmallerThanSourceFile)
+      const compressor = typeof result.data.compressor === 'string' ? result.data.compressor : result.data.compressor.name
+      this.success(result.id, result.data.source, result.data.compressed!, compressor, result.data.isSmallerThanSourceFile)
     }
   }
 
