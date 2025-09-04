@@ -1,122 +1,288 @@
-# unplugin-starter
+# unplugin-compress-image
 
-[![NPM version](https://img.shields.io/npm/v/unplugin-starter?color=a1b858&label=)](https://www.npmjs.com/package/unplugin-starter)
+[![npm version](https://img.shields.io/npm/v/unplugin-compress-image.svg)](https://www.npmjs.com/package/unplugin-compress-image)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Starter template for [unplugin](https://github.com/unjs/unplugin).
+[中文文档](./README.zh-CN.md) | English
 
-## Template Usage
+An image compression plugin for build tools like Vite, Webpack, Rollup and more. Supports compressing image assets using jsquash, TinyPNG, and SVGO, with support for custom compressors.
 
-To use this template, clone it down using:
+## ✨ Features
+
+- 🏗️ **Multi Build Tool Support**: Supports Vite, Rollup, Webpack (not tested). Future versions will support all build tools supported by unplugin
+- 🖼️ **Multi Format Support**: PNG, JPEG, WebP, AVIF, SVG
+- 🎯 **Multi Compressor Support**:
+  - **jsquash**: Local compression, no network connection required
+  - **TinyPNG**: Cloud compression with higher compression ratio
+  - **SVGO**: SVG optimization
+  - **Custom Compressors**: Support for extending custom compression logic
+  - **Auto Selection**: Multiple compressors process simultaneously, automatically keeping the smallest result
+- 📦 **Base64 Image Compression**: Automatically compress base64 format images in JS/CSS files
+- 💾 **Caching Mechanism**: Avoid duplicate compression, improve build performance
+- 📊 **Build Logs**: Display compression results and performance statistics
+
+## 📦 Installation
 
 ```bash
-npx degit unplugin/unplugin-starter my-unplugin
+# pnpm
+pnpm add -D unplugin-compress-image
+
+# npm
+npm install -D unplugin-compress-image
+
+# yarn
+yarn add -D unplugin-compress-image
 ```
 
-And do a global replacement of `unplugin-starter` with your plugin name.
+## 🚀 Usage
 
-Then you can start developing your unplugin 🔥
+### Vite
 
-To test your plugin, run: `pnpm run dev`
-To release a new version, run: `pnpm run release`
-
-## Install
-
-```bash
-npm i unplugin-starter
-```
-
-<details>
-<summary>Vite</summary><br>
-
-```ts
+```typescript
 // vite.config.ts
-import Starter from 'unplugin-starter/vite'
+import CompressImage from 'unplugin-compress-image/vite'
+import { defineConfig } from 'vite'
 
 export default defineConfig({
   plugins: [
-    Starter({ /* options */ }),
-  ],
+    CompressImage()
+  ]
 })
 ```
 
-Example: [`playground/`](./playground/)
+### Webpack (Not Tested)
 
-<br></details>
-
-<details>
-<summary>Rollup</summary><br>
-
-```ts
-// rollup.config.js
-import Starter from 'unplugin-starter/rollup'
-
-export default {
-  plugins: [
-    Starter({ /* options */ }),
-  ],
-}
-```
-
-<br></details>
-
-<details>
-<summary>Webpack</summary><br>
-
-```ts
+```javascript
 // webpack.config.js
+const CompressImage = require('unplugin-compress-image/webpack')
+
 module.exports = {
-  /* ... */
   plugins: [
-    require('unplugin-starter/webpack')({ /* options */ })
+    CompressImage({
+      jsquash: {
+        mozjpeg: { quality: 80 },
+        oxipng: { level: 3 }
+      }
+    })
   ]
 }
 ```
 
-<br></details>
+### Rollup
 
-<details>
-<summary>Nuxt</summary><br>
+```javascript
+// rollup.config.js
+import CompressImage from 'unplugin-compress-image/rollup'
 
-```ts
-// nuxt.config.js
-export default defineNuxtConfig({
-  modules: [
-    ['unplugin-starter/nuxt', { /* options */ }],
-  ],
-})
-```
-
-> This module works for both Nuxt 2 and [Nuxt Vite](https://github.com/nuxt/vite)
-
-<br></details>
-
-<details>
-<summary>Vue CLI</summary><br>
-
-```ts
-// vue.config.js
-module.exports = {
-  configureWebpack: {
-    plugins: [
-      require('unplugin-starter/webpack')({ /* options */ }),
-    ],
-  },
+export default {
+  plugins: [
+    CompressImage({
+      jsquash: {
+        mozjpeg: { quality: 80 }
+      }
+    })
+  ]
 }
 ```
 
-<br></details>
+## ⚙️ Configuration Options
 
-<details>
-<summary>esbuild</summary><br>
+### Basic Configuration
 
-```ts
-// esbuild.config.js
-import { build } from 'esbuild'
-import Starter from 'unplugin-starter/esbuild'
+```typescript
+interface Options {
+  // TinyPNG compressor configuration
+  tinypng?: false | TinyPngOptions
 
-build({
-  plugins: [Starter()],
+  // jsquash compressor configuration
+  jsquash?: false | JsquashOptions
+
+  // SVGO compressor configuration
+  svgo?: false | SvgoConfig
+
+  // Custom compressors
+  compressors?: (Compressor | CompressorFn)[]
+
+  // Cache configuration
+  cache?: false | {
+    dir?: string // Cache directory, default: '{cwd}/node_modules/.compress-image-cache'
+  }
+
+  // Show logs
+  logger?: boolean // Default: true
+
+  // Compress base64 images
+  base64?: boolean // Default: true
+}
+```
+
+### TinyPNG Configuration
+
+```typescript
+interface TinyPngOptions {
+  // API keys (supports multiple keys for rotation)
+  // Can also be set via TINYPNG_KEYS environment variable
+  keys?: string[]
+
+  // Proxy configuration
+  proxy?: string
+
+  // Custom API URL
+  url?: string
+}
+```
+
+**Environment Variable Support**:
+
+TinyPNG API keys support configuration via environment variables to avoid hardcoding sensitive information in code:
+
+```plain
+# Single API key
+TINYPNG_KEYS="your-api-key"
+
+# Multiple API keys (comma separated)
+TINYPNG_KEYS="key1,key2,key3"
+```
+
+If both `keys` in the configuration file and environment variables are set, the configuration file settings will take precedence.
+
+### jsquash Configuration
+
+```typescript
+interface JsquashOptions {
+  // JPEG compression configuration
+  // For detailed configuration parameters, refer to: https://github.com/jamsinclair/jSquash/tree/main/packages/mozjpeg
+  // Note: Currently uses library default values, custom defaults will be provided in future versions
+  mozjpeg?: {}
+
+  // PNG compression configuration
+  // For detailed configuration parameters, refer to: https://github.com/jamsinclair/jSquash/tree/main/packages/oxipng
+  // Note: Currently uses library default values, custom defaults will be provided in future versions
+  oxipng?: {}
+
+  // WebP compression configuration
+  // For detailed configuration parameters, refer to: https://github.com/jamsinclair/jSquash/tree/main/packages/webp
+  // Note: Currently uses library default values, custom defaults will be provided in future versions
+  webp?: {}
+
+  // AVIF compression configuration
+  // For detailed configuration parameters, refer to: https://github.com/jamsinclair/jSquash/tree/main/packages/avif
+  // Note: Currently uses library default values, custom defaults will be provided in future versions
+  avif?: {}
+}
+```
+
+### SVGO Configuration
+
+```typescript
+interface SvgoConfig {
+  plugins?: string[] | object[]
+  js2svg?: object
+  // For detailed configuration parameters, refer to: https://github.com/svg/svgo
+  // Note: Currently uses library default values, custom defaults will be provided in future versions
+}
+```
+
+## 🔧 Custom Compressors
+
+You can use `defineCompressor` to create custom compressors:
+
+```typescript
+import { defineCompressor } from 'unplugin-compress-image/define'
+
+const customCompressor = defineCompressor('custom', () => ({
+  use: (fileType) => {
+    // Define supported file types
+    return fileType.ext === 'png'
+  },
+
+  compress: async (buffer, fileType) => {
+    // Implement compression logic
+    // Return compressed buffer
+    return compressedBuffer
+  }
+}))
+
+// Use in configuration
+export default defineConfig({
+  plugins: [
+    CompressImage({
+      compressors: [customCompressor]
+    })
+  ]
 })
 ```
 
-<br></details>
+## 📋 Usage Examples
+
+### Local Compression Only
+
+```typescript
+CompressImage({
+  jsquash: {
+    mozjpeg: { quality: 85 },
+    oxipng: { level: 3 },
+    webp: { quality: 85 }
+  },
+  tinypng: false
+})
+```
+
+### TinyPNG Only
+
+```typescript
+CompressImage({
+  tinypng: {
+    keys: ['your-api-key-1', 'your-api-key-2']
+  },
+  jsquash: false
+})
+```
+
+### Using Environment Variables for TinyPNG
+
+```typescript
+// After setting environment variables, keys configuration can be omitted
+// export TINYPNG_KEYS="your-api-key"
+// or export TINYPNG_KEYS="key1,key2,key3"
+CompressImage({
+  tinypng: true, // Read API keys from environment variables
+  jsquash: false
+})
+```
+
+### Mixed Multiple Compressors
+
+```typescript
+CompressImage({
+  // PNG/JPEG using TinyPNG
+  tinypng: {
+    keys: ['your-api-key']
+  },
+  // WebP/AVIF using jsquash
+  jsquash: {
+    webp: { quality: 80 },
+    avif: { quality: 70 }
+  },
+  // SVG using SVGO
+  svgo: {
+    plugins: ['preset-default']
+  }
+})
+```
+
+## 📊 Compression Results
+
+The plugin displays compression statistics after build completion:
+
+![logs](./docs/logs.png)
+
+## 🔗 Related Links
+
+- [jsquash](https://github.com/jamsinclair/jSquash) - WebAssembly image compression
+- [TinyPNG](https://tinypng.com/developers/reference/nodejs) - PNG and JPEG compression
+- [SVGO](https://github.com/svg/svgo) - SVG optimization
+
+## 📄 License
+
+[MIT](LICENSE) License © 2025 [pzehrel](https://github.com/pzehrel)
