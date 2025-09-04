@@ -121,7 +121,7 @@ export class CompressLogger {
     if (isCompleted) {
       print('')
 
-      print(`${c.green(`${before}kB`)} -> ${c.green(`${after}kB`)} ≈ ${c.green(c.bold(`↓${percent}%`))} reduction`)
+      print(`${c.green(`${fixed(before)}kB`)} -> ${c.green(`${fixed(after)}kB`)} ≈ ${c.green(c.bold(`↓${percent}%`))} reduction`)
 
       const total = [
         `total ${c.blue(`${this.records.length}`)}`,
