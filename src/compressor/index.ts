@@ -73,6 +73,17 @@ interface CompressBinaryResult {
 export async function compressBinary(id: string, source: FileDataType | Base64): Promise<CompressBinaryResult | CompressError | null> {
   source = toUnit8Array(source)
 
+  const cache = Context.cache?.get(source)
+  if (cache) {
+    return {
+      id,
+      compressed: cache,
+      isSmallerThanSourceFile: true,
+      source,
+      compressor: 'cache',
+    }
+  }
+
   const fileType = await fileTypeFromBuffer(source)
   if (!fileType) {
     const error = new CompressError('get file type failed', id)
@@ -118,6 +129,10 @@ export async function compressBinary(id: string, source: FileDataType | Base64):
     }
     return acc
   }, {} as { best?: CompressBinaryResult, error?: CompressError })
+
+  if (best && best.isSmallerThanSourceFile) {
+    Context.cache?.set(source, best.compressed)
+  }
 
   return best || error
 }
