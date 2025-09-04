@@ -130,8 +130,8 @@ export async function compressBinary(id: string, source: FileDataType | Base64):
     return acc
   }, {} as { best?: CompressBinaryResult, error?: CompressError })
 
-  if (best && best.isSmallerThanSourceFile) {
-    Context.cache?.set(source, best.compressed)
+  if (best) {
+    Context.cache?.set(source, best.isSmallerThanSourceFile ? best.compressed : source)
   }
 
   return best || error
