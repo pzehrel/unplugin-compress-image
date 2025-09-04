@@ -3,30 +3,31 @@
   "type": "module",
   "version": "0.0.0",
   "packageManager": "pnpm@10.14.0",
-  "description": "",
+  "description": "A image compression plugin for Vite and Webpack that compresses your image assets using jsquash, tinpng, and SVGO, with support for custom compressors",
   "license": "MIT",
-  "homepage": "https://github.com/antfu/unplugin-starter#readme",
+  "homepage": "https://github.com/pzehrel/unplugin-compress-image#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/antfu/unplugin-starter.git"
+    "url": "git+https://github.com/pzehrel/unplugin-compress-image.git"
   },
   "bugs": {
-    "url": "https://github.com/antfu/unplugin-starter/issues"
+    "url": "https://github.com/pzehrel/unplugin-compress-image/issues"
   },
   "keywords": [
     "unplugin",
     "vite",
     "webpack",
     "rollup",
-    "transform"
+    "vite-plugin",
+    "webpack-plugin",
+    "image compression",
+    "image optimization",
+    "svgo",
+    "image"
   ],
   "exports": {
     ".": "./dist/index.js",
-    "./astro": "./dist/astro.js",
-    "./esbuild": "./dist/esbuild.js",
-    "./farm": "./dist/farm.js",
     "./rollup": "./dist/rollup.js",
-    "./rspack": "./dist/rspack.js",
     "./types": "./dist/types.js",
     "./vite": "./dist/vite.js",
     "./webpack": "./dist/webpack.js",
@@ -67,15 +68,6 @@
     "webpack": "^4 || ^5"
   },
   "peerDependenciesMeta": {
-    "@farmfe/core": {
-      "optional": true
-    },
-    "@nuxt/kit": {
-      "optional": true
-    },
-    "@nuxt/schema": {
-      "optional": true
-    },
     "esbuild": {
       "optional": true
     },
@@ -106,8 +98,6 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "^5.2.1",
-    "@nuxt/kit": "^4.0.3",
-    "@nuxt/schema": "^4.0.3",
     "@types/columnify": "^1.5.4",
     "@types/emscripten": "^1.40.1",
     "@types/findup-sync": "^4.0.5",
