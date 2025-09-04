@@ -22,8 +22,6 @@ interface Fail {
 
 export class CompressLogger {
   private records: (Success | Fail)[] = []
-  private successCount = 0
-  private failCount = 0
 
   add(result: Awaited<ReturnType<typeof compress>>): void {
     if (!result.data) {
@@ -65,7 +63,6 @@ export class CompressLogger {
       compressor,
       isReplace,
     })
-    this.successCount += 1
   }
 
   fail(id: string, error: Error, compressor?: string): void {
@@ -74,15 +71,29 @@ export class CompressLogger {
       err.compressor = compressor
     }
     this.records.push({ success: false, id, error: err })
-    this.failCount += 1
   }
 
   printStats(print?: (message: string) => void): void {
     // eslint-disable-next-line no-console
     print ||= console.info
 
-    const isCompleted = this.records.length > 0 && this.successCount > 0
-    const isSuccess = isCompleted && this.failCount === 0
+    const { successes, skips, fails, before, after } = this.records.reduce((acc, item) => {
+      if (item.success && item.isReplace) {
+        acc.before += item.before
+        acc.after += item.after
+        acc.successes += 1
+      }
+      else if (item.success && !item.isReplace) {
+        acc.skips += 1
+      }
+      else {
+        acc.fails += 1
+      }
+      return acc
+    }, { skips: 0, successes: 0, fails: 0, after: 0, before: 0 })
+    const percent = fixed((before - after) / before * 100)
+    const isCompleted = this.records.length > 0 && successes > 0
+    const isSuccess = isCompleted && fails === 0
 
     print(`${c.cyan(`[plugin ${PKG_NAME}]`)} - compress images ${isCompleted ? c.green(isSuccess ? 'succeeded' : 'completed') : c.yellow('failed')}`)
 
@@ -109,22 +120,6 @@ export class CompressLogger {
 
     if (isCompleted) {
       print('')
-
-      const { successes, skips, fails, before, after } = this.records.reduce((acc, item) => {
-        if (item.success && item.isReplace) {
-          acc.before += item.before
-          acc.after += item.after
-          acc.successes += 1
-        }
-        else if (item.success && !item.isReplace) {
-          acc.skips += 1
-        }
-        else {
-          acc.fails += 1
-        }
-        return acc
-      }, { skips: 0, successes: 0, fails: 0, after: 0, before: 0 })
-      const percent = fixed((before - after) / before * 100)
 
       print(`${c.green(`${before}kB`)} -> ${c.green(`${after}kB`)} ≈ ${c.green(c.bold(`↓${percent}%`))} reduction`)
 
