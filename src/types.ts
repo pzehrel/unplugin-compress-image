@@ -1,3 +1,4 @@
+import type { LoggerOptions } from './common'
 import type { Compressor, CompressorFn } from './compressor'
 import type { JsquashOptions, SvgoConfig, TinyPngOptions } from './compressors'
 
@@ -61,7 +62,7 @@ export interface Options {
    * Show logger
    * @default true
    */
-  logger?: boolean
+  logger?: false | LoggerOptions
 
   /**
    * Compress base64-formatted images in JS/CSS files

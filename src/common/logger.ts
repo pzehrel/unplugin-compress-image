@@ -5,6 +5,14 @@ import { name as PKG_NAME } from '../../package.json'
 import { CompressError } from '../utils'
 import { Context } from './context'
 
+export interface LoggerOptions {
+  /**
+   * Show detailed logs
+   * @default true
+   */
+  detail?: boolean
+}
+
 interface Success {
   success: true
   id: string
@@ -21,6 +29,8 @@ interface Fail {
 }
 
 export class CompressLogger {
+  constructor(public readonly options: LoggerOptions = {}) {}
+
   private records: (Success | Fail)[] = []
 
   add(result: Awaited<ReturnType<typeof compress>>): void {
@@ -95,33 +105,34 @@ export class CompressLogger {
     const isCompleted = this.records.length > 0 && successes > 0
     const isSuccess = isCompleted && fails === 0
 
+    print('')
     print(`${c.cyan(`[plugin ${PKG_NAME}]`)} - compress images ${isCompleted ? c.green(isSuccess ? 'succeeded' : 'completed') : c.yellow('failed')}`)
 
-    const { outdir } = Context
-    const logs = columnify(this.records.map((item) => {
-      const file = `${c.dim(outdir)}/${c.green(item.id)}`
-      if (item.success) {
+    if (this.options.detail !== false && this.records.length > 0) {
+      const { outdir } = Context
+      const logs = columnify(this.records.map((item) => {
+        const file = `${c.dim(outdir)}/${c.green(item.id)}`
+        if (item.success) {
+          return {
+            file,
+            reduction: item.rate === 0 ? c.yellow(`${item.rate}%`) : item.rate > 100 ? c.yellow(`↑${item.rate - 100}%`) : c.green(`↓${item.rate}%`),
+            compressor: item.compressor,
+            size: item.isReplace ? c.dim(`${item.before}kB -> ${item.after}kB`) : c.bold(c.yellow('skipped')),
+          }
+        }
         return {
           file,
-          reduction: item.rate > 100 ? c.yellow(`↑${item.rate - 100}%`) : c.green(`↓${item.rate}%`),
-          compressor: item.compressor,
-          size: item.isReplace ? c.dim(`${item.before}kB -> ${item.after}kB`) : c.bold(c.yellow('skipped')),
+          reduction: `${c.red('error')}`,
+          compressor: c.red(item.error.compressor || 'unknown'),
+          size: c.red(item.error.message || 'unknown error'),
         }
-      }
-      return {
-        file,
-        reduction: `${c.red('error')}`,
-        compressor: c.red(item.error.compressor || 'unknown'),
-        size: c.red(item.error.message || 'unknown error'),
-      }
-    }), { columnSplitter: '  ' })
-
-    print(logs)
+      }), { columnSplitter: '  ' })
+      print(logs)
+      print('')
+    }
 
     if (isCompleted) {
-      print('')
-
-      print(`${c.green(`${before}kB`)} -> ${c.green(`${after}kB`)} ≈ ${c.green(c.bold(`↓${percent}%`))} reduction`)
+      print(`${c.green(`${fixed(before)}kB`)} -> ${c.green(`${fixed(after)}kB`)} ≈ ${c.green(c.bold(`↓${percent}%`))} reduction`)
 
       const total = [
         `total ${c.blue(`${this.records.length}`)}`,

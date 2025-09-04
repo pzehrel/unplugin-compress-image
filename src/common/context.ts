@@ -24,7 +24,7 @@ export class Context {
     this.root = config.root
     this.outdir = config.outdir
     if (config.options?.logger !== false) {
-      this.logger = new CompressLogger()
+      this.logger = new CompressLogger(config.options?.logger)
     }
     if (config.options?.cache !== false) {
       this.cache = new CompressCache(config.root, config.options?.cache?.dir)
