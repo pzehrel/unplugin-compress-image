@@ -8,7 +8,7 @@ import { Context } from './context'
 export interface LoggerOptions {
   /**
    * Show detailed logs
-   * @default false
+   * @default true
    */
   detail?: boolean
 }
@@ -108,7 +108,7 @@ export class CompressLogger {
     print('')
     print(`${c.cyan(`[plugin ${PKG_NAME}]`)} - compress images ${isCompleted ? c.green(isSuccess ? 'succeeded' : 'completed') : c.yellow('failed')}`)
 
-    if (this.options.detail && this.records.length > 0) {
+    if (this.options.detail !== false && this.records.length > 0) {
       const { outdir } = Context
       const logs = columnify(this.records.map((item) => {
         const file = `${c.dim(outdir)}/${c.green(item.id)}`
