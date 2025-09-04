@@ -1,4 +1,3 @@
-// import type MagicString from 'magic-string'
 import type { Compressor, CompressorFn } from './compressor'
 import type { JsquashOptions, SvgoConfig, TinyPngOptions } from './compressors'
 
