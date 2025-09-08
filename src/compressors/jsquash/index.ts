@@ -15,25 +15,30 @@ export const jsquash = defineCompressor('jsquash', (ctx) => {
     compress: async (input, fileType, options) => {
       const source = ctx.utils.toArrayBuffer(input)
 
-      switch (fileType.mime) {
-        case 'image/jpeg':
-        case 'image/jpg':
-          return await compressMozJpeg(source, options?.jsquash?.mozjpeg)
-        case 'image/png':
-          return await compressOxiPng(source, options?.jsquash?.oxipng)
-        case 'image/webp':
-          return await compressWebp(source, options?.jsquash?.webp)
-        case 'image/avif':
-          return await compressAvif(source, options?.jsquash?.avif)
-        default: return null
+      if (fileType.mime === 'image/png' && options?.jsquash?.oxipng !== false) {
+        return compressOxiPng(source, options?.jsquash?.oxipng)
       }
+
+      if ((fileType.mime === 'image/jpeg' || fileType.mime === 'image/jpg') && options?.jsquash?.mozjpeg !== false) {
+        return compressMozJpeg(source, options?.jsquash?.mozjpeg)
+      }
+
+      if (fileType.mime === 'image/webp' && options?.jsquash?.webp !== false) {
+        return compressWebp(source, options?.jsquash?.webp)
+      }
+
+      if (fileType.mime === 'image/avif' && options?.jsquash?.avif !== false) {
+        return compressAvif(source, options?.jsquash?.avif)
+      }
+
+      return null
     },
   }
 })
 
 export interface JsquashOptions {
-  avif?: Partial<AvifOptions>
-  mozjpeg?: Partial<JpegOptions>
-  oxipng?: Partial<OxipngOptions>
-  webp?: Partial<WebpOptions>
+  avif?: false | Partial<AvifOptions>
+  mozjpeg?: false | Partial<JpegOptions>
+  oxipng?: false | Partial<OxipngOptions>
+  webp?: false | Partial<WebpOptions>
 }
