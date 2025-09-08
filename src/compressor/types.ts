@@ -25,6 +25,13 @@ export interface Compressor<Name extends string = any> {
   use?: RegExp | ((fileType: FileTypeResult) => boolean)
 
   /**
+   * whether to enable this compressor
+   * @param options
+   * @returns
+   */
+  enable?: (options?: Name extends keyof Options ? ExcludeBoolean<Options, Name> : Options) => boolean | Promise<boolean>
+
+  /**
    * This method is called after the compressor is created, and is only called once.
    * @param ctx
    * @returns
@@ -55,14 +62,14 @@ export interface CompressorFn<Name extends string = any> {
   id: Name
 }
 
-type NamelessCompressor = Omit<Compressor<any>, 'name'>
+type NamelessCompressor<N extends string = any> = Omit<Compressor<N>, 'name'>
 
 /**
  * define a compressor
  * @param name compressor name
  * @param compressor compressor object or factory function
  */
-export function defineCompressor<N extends string>(name: N, compressor: NamelessCompressor | ((compress: CompressorContext<N>) => NamelessCompressor)): CompressorFn<N> {
+export function defineCompressor<N extends string>(name: N, compressor: NamelessCompressor<N> | ((compress: CompressorContext<N>) => NamelessCompressor<N>)): CompressorFn<N> {
   if (typeof compressor === 'function') {
     const result: CompressorFn<N> = (context: CompressorContext<N>) => {
       const c = compressor(context)
