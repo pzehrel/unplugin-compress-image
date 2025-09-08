@@ -25,6 +25,13 @@ export interface Compressor<Name extends string = any> {
   use?: RegExp | ((fileType: FileTypeResult) => boolean)
 
   /**
+   * whether to enable this compressor
+   * @param options
+   * @returns
+   */
+  enable?: (options?: Name extends keyof Options ? ExcludeBoolean<Options, Name> : Options) => boolean | Promise<boolean>
+
+  /**
    * This method is called after the compressor is created, and is only called once.
    * @param ctx
    * @returns

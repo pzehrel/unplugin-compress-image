@@ -14,9 +14,10 @@ const compressorMap = new Map<string | CompressorFn, Compressor>()
 export async function initCompressors(options?: Options): Promise<void> {
   const context: CompressorContext = { options, utils: _contextUtils }
 
-  if (compressorMap.size === 0) {
-    for (const compressor of getBuiltInCompressors(options)) {
-      compressorMap.set(compressor, compressor(context))
+  for (const compressor of getBuiltInCompressors(options)) {
+    const obj = typeof compressor === 'function' ? compressor(context) : compressor
+    if (!obj.enable || obj.enable(options) === true) {
+      compressorMap.set(compressor, obj)
     }
   }
 
