@@ -1,0 +1,20 @@
+.div, .div2, .div3 {
+  width: 200px;
+  height: 200px;
+  background-size: cover;
+  border: 1px solid #000;
+}
+.div {
+  background: url("./assets/2.png");
+}
+.div2 {
+  background: url('./assets/1.png');
+}
+.div3 {
+  background: url('./assets/3.png');
+}
+
+img {
+  display: block;
+  border: 1px solid #000;
+}
