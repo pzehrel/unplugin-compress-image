@@ -5,6 +5,7 @@ const Html = require('html-webpack-plugin')
  * @type {import("webpack4/declarations/WebpackOptions").WebpackOptions}
  */
 const config = {
+  mode: 'production',
   entry: './main.ts',
   output: {
     path: resolve(__dirname, 'dist'),
