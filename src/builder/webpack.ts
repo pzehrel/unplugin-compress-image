@@ -33,9 +33,11 @@ export function createWebpackPlugin(options: Options | undefined): (compiler: We
       })
     })
 
+    // compiler.webpack.version
     // TODO: support webpack 5, referenced "image-minimizer-webpack-plugin"
 
-    compiler.hooks.afterDone.tap(PKG_NAME, () => {
+    const done = compiler.hooks.afterDone || compiler.hooks.done
+    done.tap(PKG_NAME, () => {
       Context.logger?.printTotal()
     })
   }
