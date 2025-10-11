@@ -1,0 +1,23 @@
+{
+  "name": "unplugin-compress-image--example-webpack5",
+  "scripts": {
+    "build": "webpack --config webpack.config.js"
+  },
+  "dependencies": {
+    "ts-node": "^10.9.2",
+    "unplugin-compress-image": "link:../../"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.9",
+    "clean-webpack-plugin": "^4.0.0",
+    "css-loader": "7.1.2",
+    "file-loader": "^6.2.0",
+    "html-loader": "^5.1.0",
+    "html-webpack-plugin": "^5.6.4",
+    "style-loader": "4.0.0",
+    "ts-loader": "^9.5.4",
+    "typescript": "^5.9.3",
+    "webpack": "^5.102.1",
+    "webpack-cli": "^6.0.1"
+  }
+}
