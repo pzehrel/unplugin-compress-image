@@ -83,10 +83,7 @@ export class CompressLogger {
     this.records.push({ success: false, id, error: err })
   }
 
-  printStats(print?: (message: string) => void): void {
-    // eslint-disable-next-line no-console
-    print ||= console.info
-
+  private stats(): { successes: number, skips: number, fails: number, before: number, after: number } {
     const { successes, skips, fails, before, after } = this.records.reduce((acc, item) => {
       if (item.success && item.isReplace) {
         acc.before += item.before
@@ -101,6 +98,14 @@ export class CompressLogger {
       }
       return acc
     }, { skips: 0, successes: 0, fails: 0, after: 0, before: 0 })
+    return { successes, skips, fails, before, after }
+  }
+
+  printStats(print?: (message: string) => void): void {
+    // eslint-disable-next-line no-console
+    print ||= console.info
+
+    const { successes, skips, fails, before, after } = this.stats()
     const percent = fixed((before - after) / before * 100)
     const isCompleted = this.records.length > 0 && successes > 0
     const isSuccess = isCompleted && fails === 0
@@ -130,6 +135,32 @@ export class CompressLogger {
       print(logs)
       print('')
     }
+
+    if (isCompleted) {
+      print(`${c.green(`${fixed(before)}kB`)} -> ${c.green(`${fixed(after)}kB`)} ≈ ${c.green(c.bold(`↓${percent}%`))} reduction`)
+
+      const total = [
+        `total ${c.blue(`${this.records.length}`)}`,
+        `successed ${c.green(`${successes}`)}`,
+        `skipped ${c.yellow(`${skips}`)}`,
+        `failed ${c.red(`${fails}`)}`,
+      ]
+
+      print(total.join(', '))
+    }
+  }
+
+  printTotal(print?: (message: string) => void): void {
+    // eslint-disable-next-line no-console
+    print ||= console.info
+
+    const { successes, skips, fails, before, after } = this.stats()
+    const percent = fixed((before - after) / before * 100)
+    const isCompleted = this.records.length > 0 && successes > 0
+    const isSuccess = isCompleted && fails === 0
+
+    print('')
+    print(`${c.cyan(`[plugin ${PKG_NAME}]`)} - compress images ${isCompleted ? c.green(isSuccess ? 'succeeded' : 'completed') : c.yellow('failed')}`)
 
     if (isCompleted) {
       print(`${c.green(`${fixed(before)}kB`)} -> ${c.green(`${fixed(after)}kB`)} ≈ ${c.green(c.bold(`↓${percent}%`))} reduction`)
