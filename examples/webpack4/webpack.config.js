@@ -1,6 +1,7 @@
 const { resolve } = require('node:path')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 const Html = require('html-webpack-plugin')
+const CompressImage = require('unplugin-compress-image/webpack')
 /**
  * @type {import("webpack4/declarations/WebpackOptions").WebpackOptions}
  */
@@ -16,6 +17,7 @@ const config = {
   resolve: {
     extensions: ['.ts', '.js'], // 让 webpack 能解析 .ts 文件
   },
+
   module: {
 
     rules: [
@@ -58,6 +60,9 @@ const config = {
   },
   plugins: [
     new CleanWebpackPlugin(),
+    CompressImage({
+      tinypng: false,
+    }),
     new Html({
       template: resolve(__dirname, 'index.html'),
       inject: 'body',
