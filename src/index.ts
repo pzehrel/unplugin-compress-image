@@ -13,7 +13,7 @@ export const unpluginCompressImageFactory: UnpluginFactory<Options | undefined> 
     rollup: createRollupPlugin(options),
     vite: createRollupPlugin(options),
     rolldown: createRollupPlugin(options) as Partial<RolldownPlugin>,
-    webpack: createWebpackPlugin(options, PKG_NAME),
+    webpack: createWebpackPlugin(options),
   }
 }
 

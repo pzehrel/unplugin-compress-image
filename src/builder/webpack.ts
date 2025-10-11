@@ -1,43 +1,42 @@
 import type { WebpackCompiler } from 'unplugin'
 import type { Options } from '../types'
-import { Buffer } from 'node:buffer'
-import { relative } from 'node:path'
+import url from 'node:url'
+import { name as PKG_NAME } from '../../package.json'
 import { Context } from '../common'
-import { compress } from '../compressor'
 
-export function createWebpackPlugin(options: Options | undefined, PKG_NAME: string): (compiler: WebpackCompiler) => void {
+export function createWebpackPlugin(options: Options | undefined): (compiler: WebpackCompiler) => void {
   return (compiler) => {
-    compiler.hooks.thisCompilation.tap(PKG_NAME, (compilation) => {
-      compilation.hooks.processAssets.tapAsync(
-        { name: PKG_NAME, stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE },
-        async (assets, callback) => {
-          await Context.create({
-            root: compiler.context,
-            outdir: compiler.options.output.path || 'dist',
-            options,
-          })
+    // Only enable in build mode
+    if (compiler.options.mode !== 'production') {
+      return
+    }
 
-          const queue = Object.entries(assets).map(async ([absolute, asset]) => {
-            const id = relative(Context.root, absolute)
-            const source = asset.source()
-            const result = await compress(id, source)
-            if (result.data?.isSmallerThanSourceFile) {
-              const buffer = Buffer.from(result.data.compressed)
-              compilation.updateAsset(absolute, new compiler.webpack.sources.RawSource(buffer))
-            }
-            Context.logger?.add(result)
-          })
-
-          await Promise.all(queue)
-
-          callback()
-        },
-      )
+    compiler.hooks.run.tapPromise(PKG_NAME, async () => {
+      await Context.create({
+        root: compiler.context,
+        outdir: compiler.options.output.path || 'dist',
+        options,
+      })
     })
 
-    compiler.hooks.done.tap(PKG_NAME, () => {
-      const logger = compiler.getInfrastructureLogger(PKG_NAME)
-      Context.logger?.printStats(logger.info.bind(logger))
+    // compiler.webpack.version
+
+    // support webpack 4
+    compiler.hooks.compilation.tap(PKG_NAME, async (compilation) => {
+      compiler.webpack.NormalModule.getCompilationHooks(compilation).loader.tap(PKG_NAME, (_, module) => {
+        // Using a loader to compress resource files ensures that the resource files are compressed before being processed by other loaders.
+        if (/\.(?:png|jpe?g|gif|webp|avif|svg)$/i.test(module.resource)) {
+          const loaderUrl = url.fileURLToPath(new URL('../dist/webpack-loader.cjs', import.meta.url))
+          // The execution order of loaders is stack-based (last-in, first-out).
+          module.loaders.push({ loader: loaderUrl })
+        }
+      })
+    })
+
+    // TODO: support webpack 5, referenced "image-minimizer-webpack-plugin"
+
+    compiler.hooks.afterDone.tap(PKG_NAME, () => {
+      Context.logger?.printTotal()
     })
   }
 }
